@@ -1,0 +1,25 @@
+{% set NETWORK = properties["name"] | default(env["project"]) %}
+
+resources:
+
+- type: compute.v1.network
+  name: {{ NETWORK }}-net
+  properties:
+    autoCreateSubnetworks: false
+
+{% for subnet in properties["subnets"] %}
+- type: compute.v1.subnetwork
+  name: {{ subnet.name }}-sn
+  properties:
+    network: $(ref.{{ NETWORK }}-net.selfLink)
+    ipCidrRange: {{ subnet.range }}
+    region: {{ subnet.region }}
+    privateIpGoogleAccess: {{ subnet.privateIpGoogleAccess }}
+    {% if subnet.secondaryIpRanges %}
+    secondaryIpRanges:
+      {% for ipRange in subnet.secondaryIpRanges %}
+      - rangeName: {{ ipRange.name }}
+        ipCidrRange: {{ ipRange.range }}
+      {% endfor %}
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,74 @@
+info:
+  title: Network VPC template with subnets
+  author: Rael Garcia <me@rael.io>
+  description: Creates a Network VPC resource
+  version: 1.0
+
+import:
+  - path: vpc-network.jinja
+
+required:
+  - subnets
+
+additionalProperties: false
+
+properties:
+
+  name:
+    type: string
+    description: Subnetwork name for users to identify CIDR blocks.
+    pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
+
+  subnets:
+    type: array
+    default: []
+    items:
+      type: object
+      required:
+        - name
+        - region
+        - range
+        - privateIpGoogleAccess
+        - secondaryIpRanges
+      properties:
+
+        name:
+          type: string
+          description: Subnetwork name for users to identify CIDR blocks. Defaults to project id.
+          pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
+
+        region:
+          type: string
+          description: URL of the region where the Subnetwork resides.
+          default: europe-west1
+
+        range:
+          type: string
+          description: The range of internal addresses that are owned by this subnetwork.
+          pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([1]?[0-9]|[2]?[0-8])$
+
+        privateIpGoogleAccess:
+          type: boolean
+          default: true
+          description: Whether the VMs in this subnet can access Google services without assigned external IP addresses.
+
+        secondaryIpRanges:
+          type: array
+          default: []
+          items:
+            type: object
+            description: Secondary subnetwork ranges to use.
+            required:
+              - name
+              - range
+            properties:
+
+              name:
+                type: string
+                description: Subnetwork name for users to identify CIDR blocks.
+                pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
+
+              range:
+                type: string
+                description: The range of internal addresses that are owned by this subnetwork.
+                pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/([1]?[0-9]|[2]?[0-8])$
