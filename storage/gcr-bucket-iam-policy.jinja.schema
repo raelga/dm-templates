@@ -1,0 +1,42 @@
+info:
+  title: Google Cloud Storage GCR bucket IAM Policy
+  author: Rael Garcia <mail@rael.io>
+  description: Creates a Google Storage bucket IAM Policy resource for GCR
+  version: 1.0
+
+required:
+- name
+
+properties:
+
+  grc:
+    type: string
+    description: Existing container registry name, defaults to project name.
+
+  region:
+    enum:
+      - eu
+      - us
+      - asia
+    description: >
+      Defaults none, to use the gcr.io registry bucket.
+      gcr.io currently hosts the images in the United States, but the location may change in the future
+      us.gcr.io hosts the image in the United States, in a separate storage bucket from images hosted by gcr.io
+      eu.gcr.io hosts the images in the European Union
+      asia.gcr.io hosts the images in Asia
+      https://cloud.google.com/container-registry/docs/overview
+
+  role:
+    default: pull
+    enum:
+      - pull
+      - push
+    description: >
+        Access role for the Container Registry:
+          - Push (Read and Write)
+          - Pull (Read Only)
+
+  member:
+    type: string
+    description:
+      Member that will be able to use the GCR.

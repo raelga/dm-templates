@@ -1,0 +1,38 @@
+{#
+Currenlty the bucket IAM bindings cannot be patched, only overwritten.
+https://github.com/GoogleCloudPlatform/deploymentmanager-samples/issues/283
+#}
+
+{% set NAME = properties.gcr | default(env.project) %}
+
+{% if properties.region %}
+  {% set BUCKET = "{}.artifacts.{}.appspot.com".format(properties.region, NAME) %}
+{% else %}
+  {% set BUCKET = "artifacts.{}.appspot.com".format(NAME) %}
+{% endif %}
+
+{% if properties.role == 'pull' %}
+  {% set ROLE = "roles/storage.objectViewer" %}
+{% elif properties.role == 'push' %}
+  {% set ROLE = "roles/storage.admin" %}
+{% endif %}
+
+resources:
+
+  - name: {{ NAME }}-gcr-bucket-get-iam-policy
+    action: gcp-types/storage-v1:storage.buckets.getIamPolicy
+    properties:
+      bucket: {{ BUCKET }}
+    metadata:
+      runtimePolicy:
+        - UPDATE_ALWAYS
+
+  {# https://cloud.google.com/container-registry/docs/access-control #}
+  - name: {{ NAME }}-gcr-bucket-set-iam-policy
+    action: gcp-types/storage-v1:storage.buckets.setIamPolicy
+    properties:
+      bucket: {{ BUCKET }}
+      bindings: 
+      {# $(ref.{{ NAME }}-gcr-bucket-get-iam-policy.bindings) #}
+        - role: {{ ROLE }},
+          members: [ {{ properties.serviceAccount }} ]
