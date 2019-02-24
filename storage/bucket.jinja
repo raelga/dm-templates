@@ -1,0 +1,53 @@
+resources:
+
+  - name: {{ properties['name'] }}
+    type: storage.v1.bucket
+    properties:
+      storageClass: {{ properties['storageClass']  }}
+      location: {{ properties['location'] }}
+      {% if properties["websiteConfig"] %}
+      website:
+        mainPageSuffix: {{ properties["websiteConfig"].mainPageSuffix }}
+        notFoundPage: {{ properties["websiteConfig"].notFoundPage }}
+      {% endif %}
+
+  - name: {{ properties['name'] }}-iam-policy
+    action: gcp-types/storage-v1:storage.buckets.setIamPolicy
+    properties:
+      bucket: {{ properties['name'] }}
+      project: {{ env.project }}
+      bindings:
+        - role: roles/storage.admin
+          members:
+            - serviceAccount:{{ env['project_number'] }}@cloudservices.gserviceaccount.com
+        - role: roles/storage.legacyBucketOwner
+          members:
+            - projectEditor:{{ env['project'] }}
+            - projectOwner:{{ env['project'] }}
+        - role: roles/storage.legacyBucketReader
+          members:
+            - projectViewer:{{ env['project'] }}
+        {% if properties["websiteConfig"] %}
+        - role: roles/storage.objectViewer
+          members:
+            - allUsers
+        {% endif %}
+        {% for binding in properties.bindings %}
+        - role: {{ binding.role }}
+          members: {{ binding.members }}
+        {% endfor %}
+
+{% for ac in properties['acl'] %}
+  - name: {{ ac.name }}-acl
+    type: storage.v1.bucketAccessControl
+    properties:
+      entity: {{ ac.entity }}
+      kind: storage#bucketAccessControl
+      bucket: {{ properties['name'] }}
+      role: {{ ac.role }}
+{% endfor %}
+
+outputs:
+
+- name: name
+  value: {{ properties['name'] }}

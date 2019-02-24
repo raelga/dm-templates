@@ -1,0 +1,95 @@
+info:
+  title: Google Cloud Storage bucket
+  author: Rael Garcia <mail@rael.io>
+  description: Creates a Google Storage bucket resource
+  version: 1.0
+
+required:
+- name
+
+properties:
+
+  name:
+    type: string
+    description: Bucket name (required), must be unique in GCP.
+
+  storageClass:
+    enum:
+      - multi_regional
+      - regional
+      - nearline
+      - coldline
+    default: regional
+    description: Storage Class for the bucket.
+
+  location:
+    type: string
+    default: europe-west1
+    description: Region / Zone were the bucket will be deployed.
+  
+  bindings:
+    type: array
+    description: >
+      The bucket's website configuration, controlling how the servicebehaves
+      when accessing bucket contents as a web site.
+    items:
+      type: object
+      description: >
+        An association between a role, which comes with a set of permissions, and members who may assume that role.
+      properties:
+
+        role:
+          enum:
+            - roles/storage.objectCreator
+            - roles/storage.objectViewer
+            - roles/storage.objectAdmin
+            - roles/storage.admin
+          description: >
+            The role to which members belong. Two types of roles are supported:
+            standard IAM roles, which grant permissions that do not map directly to those provided by ACLs, 
+            and legacy IAM roles, which do map directly to ACL permissions. 
+            All roles are of the format roles/storage.specificRole.
+            https://cloud.google.com/storage/docs/access-control/iam-roles
+
+        members:
+          type: array
+          items:
+            type: string
+            description: >
+              A collection of identifiers for members who may assume the provided role. Recognized identifiers are as follows:
+                allUsers — A special identifier that represents anyone on the internet; with or without a Google account.
+                allAuthenticatedUsers — A special identifier that represents anyone who is authenticated with a Google account or a service account.
+                user:emailid — An email address that represents a specific account. For example, user:alice@gmail.com or user:joe@example.com.
+                serviceAccount:emailid — An email address that represents a service account. For example, serviceAccount:my-other-app@appspot.gserviceaccount.com .
+                group:emailid — An email address that represents a Google group. For example, group:admins@example.com.
+                domain:domain — A G Suite domain name that represents all the users of that domain. For example, domain:google.com or domain:example.com.
+                projectOwner:projectid — Owners of the given project. For example, projectOwner:my-example-project
+                projectEditor:projectid — Editors of the given project. For example, projectEditor:my-example-project
+                projectViewer:projectid — Viewers of the given project. For example, projectViewer:my-example-project
+              https://cloud.google.com/storage/docs/json_api/v1/buckets/setIamPolicy
+
+  websiteConfig:
+    type: object
+    description: >
+      The bucket's website configuration, controlling how the servicebehaves
+      when accessing bucket contents as a web site.
+    required:
+      - mainPageSuffix
+      - notFoundPage
+    properties:
+
+      mainPageSuffix:
+        type: string
+        default: index.html
+        description: >
+          If the requested object path is missing, the service will ensure the
+          path has a trailing '/', append this suffix, and attempt to retrieve
+          the resulting object.
+
+      notFoundPage:
+        type: string
+        default: 404.html
+        description: >
+          If the requested object path is missing, and any mainPageSuffix
+          object is missing, if applicable, the service will return the named
+          object from this bucket as the content for a 404 Not Found result.
