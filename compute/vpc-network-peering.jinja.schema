@@ -1,0 +1,62 @@
+info:
+  title: VPC Network Peering
+  author: Rael Garcia <me@rael.io>
+  version: 1.0
+  description: |
+    Creates / removes peering between VPC networks.
+    https://cloud.google.com/compute/docs/reference/rest/beta/networks/addPeering
+    https://cloud.google.com/compute/docs/reference/rest/beta/networks/removePeering
+
+
+imports:
+  - path: vpc-network-peering.jinja
+
+required:
+  - name
+  - network
+  - peerNetwork
+
+properties:
+  name:
+    type: string
+    description: The peering name. Must conform to RFC1035.
+  network:
+    type: string
+    description: |
+      URL of the peer network. It can be either full URL or partial URL.
+      The peer network may belong to a different project. If the partial URL does
+      not contain project, it is assumed that the peer network is in the same
+      project as the current network.
+  peerNetwork:
+    type: string
+    description: |
+      The URL of the peer network. It can be either a full URL or partial URL.
+      The peer network may belong to a different project. If the partial URL
+      does not contain project, it is assumed that the peer network is in the
+      same project as the current network.
+  autoCreateRoutes:
+    type: boolean
+    default: True
+    description: |
+      Whether full mesh connectivity is created and managed automatically.
+      When it is set to true, Google Compute Engine will automatically create and
+      manage the routes between two networks when the peering state is ACTIVE.
+      Otherwise, user needs to create routes manually to route packets to peer network.
+  importCustomRoutes:
+    type: boolean
+    default: True
+    description: |
+      Whether to export the custom routes to peer network.
+  exportCustomRoutes:
+    type: boolean
+    default: False
+    description: |
+      Whether to export the custom routes to peer network.
+  exchangeSubnetRoutes:
+    type: boolean
+    default: True
+    description: |
+      Whether full mesh connectivity is created and managed automatically.
+      When it is set to true, Google Compute Engine will automatically create and
+      manage the routes between two networks when the peering state is ACTIVE.
+      Otherwise, user needs to create routes manually to route packets to peer network.

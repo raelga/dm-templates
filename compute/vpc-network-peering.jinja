@@ -1,0 +1,25 @@
+resources:
+
+- name: {{ properties["name"] }}-addPeering
+  action: gcp-types/compute-v1:compute.networks.addPeering
+  properties:
+    name: {{ properties["name"] }}
+    network: {{ properties["network"] }}
+    peerNetwork: {{ properties["peerNetwork"] }}
+    autoCreateRoutes: {{ properties["autoCreateRoutes"] }}
+    exportCustomRoutes: {{ properties["exportCustomRoutes"] }}
+    importCustomRoutes: {{ properties["importCustomRoutes"] }}
+    exchangeSubnetRoutes: {{ properties["exchangeSubnetRoutes"] }}
+  metadata:
+    runtimePolicy:
+      - CREATE
+
+- name: {{ properties["name"] }}-removePeer
+  action: gcp-types/compute-v1:compute.networks.removePeering
+  properties:
+    name: {{ properties["name"] }}
+    network: {{ properties["network"] }}
+    peerNetwork: {{ properties["peerNetwork"] }}
+  metadata:
+    runtimePolicy:
+      - DELETE
