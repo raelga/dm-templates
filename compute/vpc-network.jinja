@@ -23,3 +23,18 @@ resources:
       {% endfor %}
     {% endif %}
 {% endfor %}
+
+{% if properties["google-managed-services-range"] %}
+- name: google-managed-services-{{ NETWORK }}
+  type: compute.v1.globalAddresses
+  properties:
+    name: google-managed-services-{{ NETWORK }}
+    address: {{ properties["google-managed-services-range"].split("/")[0] }}
+    prefixLength: {{ properties["google-managed-services-range"].split("/")[1] }}
+    addressType: INTERNAL
+    purpose: VPC_PEERING
+    network: $(ref.{{ NETWORK }}.selfLink)
+    description: >
+      Address range reserved for Google Managed Services.
+      https://cloud.google.com/vpc/docs/configure-private-services-access
+{% endif %}
