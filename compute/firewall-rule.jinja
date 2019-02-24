@@ -1,0 +1,10 @@
+resources:
+- name: {{ properties.name }}
+  type: compute.v1.firewall
+  properties:
+    network: {{ "projects/{}/global/networks/{}".format(
+      env.project, properties.network 
+    ) }}
+    sourceRanges: {{ properties.sourceRanges }}
+    allowed: {{ properties.allowed }}
+    targetTags: {{ properties.targetTags }}

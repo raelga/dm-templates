@@ -1,0 +1,49 @@
+info:
+  title: Firewall rule template
+  author: Rael Garcia <me@rael.io>
+  description: Creates a Firewall Rule resource
+  version: 1.0
+
+import:
+  - path: firewall-rule.jinja
+
+required:
+  - name
+  - network
+  - sourceRanges
+  - allowed
+additionalProperties: false
+
+properties:
+
+  name:
+    type: string
+    description: VPC name.
+    pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
+    default: base-net
+
+  network:
+    type: string
+    description: VPC name.
+    pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
+    default: base-net
+
+  sourceRanges:
+    type: array
+    default: [ "0.0.0.0/0" ]
+    items:
+      type: string
+      description: cidrBlock must be specified in CIDR notation.
+      pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
+
+  allowed:
+    type: array
+    default: [ IPProtocol: tcp ]
+
+  targetTags:
+    type: array
+    default: []
+    items:
+      type: string
+      description: Tag
+      pattern: ^[a-z]([-a-z0-9]*[a-z0-9])?
