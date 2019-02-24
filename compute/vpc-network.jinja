@@ -1,9 +1,9 @@
-{% set NETWORK = properties["name"] | default(env["project"]) %}
+{% set NETWORK = properties["name"] | default(env["project"]) + "-net" %}
 
 resources:
 
 - type: compute.v1.network
-  name: {{ NETWORK }}-net
+  name: {{ NETWORK }}
   properties:
     autoCreateSubnetworks: false
 
@@ -11,7 +11,7 @@ resources:
 - type: compute.v1.subnetwork
   name: {{ subnet.name }}-sn
   properties:
-    network: $(ref.{{ NETWORK }}-net.selfLink)
+    network: $(ref.{{ NETWORK }}.selfLink)
     ipCidrRange: {{ subnet.range }}
     region: {{ subnet.region }}
     privateIpGoogleAccess: {{ subnet.privateIpGoogleAccess }}
