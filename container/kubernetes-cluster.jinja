@@ -1,0 +1,234 @@
+resources:
+
+- name: {{ properties.name }}-gke-nodes-sa
+  type: iam.v1.serviceAccount
+  properties:
+    accountId: {{ properties.name }}-gke-nodes
+    displayName: VM Service Account for {{ properties.name }}-gke-nodes-sa GKE Cluster VMs
+
+- name: {{ properties.name }}-nodes-custom-role
+  type: gcp-types/iam-v1:projects.roles
+  properties:
+    parent: "projects/{{ env.project }}"
+    roleId: "custom.{{ properties.name }}Nodes"
+    role:
+        title: Custom Role for GKE cluster nodes
+        description: This role allows a GKE cluster nodes work with GCP APIs
+        stage: GA
+        includedPermissions:
+        - logging.logEntries.create
+        - monitoring.groups.get
+        - monitoring.groups.list
+        - monitoring.metricDescriptors.create
+        - monitoring.metricDescriptors.get
+        - monitoring.metricDescriptors.list
+        - monitoring.monitoredResourceDescriptors.get
+        - monitoring.monitoredResourceDescriptors.list
+        - monitoring.timeSeries.create
+        - monitoring.timeSeries.list
+
+- name: {{ env.project }}-get-iam-policy
+  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
+  properties:
+    resource: {{ env.project }}
+  metadata:
+    runtimePolicy:
+      - UPDATE_ALWAYS
+
+- name: {{ env.project }}-patch-iam-policy
+  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.setIamPolicy
+  properties:
+    resource: {{ env.project }}
+    policy: $(ref.{{ env.project }}-get-iam-policy)
+    gcpIamPolicyPatch:
+      add:
+        - role: $(ref.{{ properties.name }}-nodes-custom-role.name)
+          members:
+            - serviceAccount:$(ref.{{ properties.name }}-gke-nodes-sa.email)
+
+- name: {{ properties.name }}
+{% if properties.type == 'REGIONAL' %}
+  type: gcp-types/container-v1:projects.locations.clusters
+  properties:
+    parent: {{ "projects/{}/locations/{}".format(env.project, properties.network.location) }}
+{% elif properties.type == 'LOCAL' %}
+  type: gcp-types/container-v1:projects.zones.clusters
+  properties:
+    parent: {{ "projects/{}/zones/{}".format(env.project, properties.network.location) }}
+    zone: {{ properties.network.location }}
+{% endif %}
+    cluster:
+      name: {{ properties.name }}
+      network: {{ properties.network.vpc }}
+      subnetwork: {{ properties.network.subnet }}
+{% if properties.type == 'REGIONAL' %}
+      locations:
+        - "{{ properties.network.location }}-b"
+        - "{{ properties.network.location }}-c"
+        - "{{ properties.network.location }}-d"
+{% elif properties.type == 'LOCAL' %}
+      locations:
+        - {{ properties.network.location }}
+{% endif %}
+      initialClusterVersion: {{ properties.initialVersion }}
+      loggingService: {{ properties.monitoringService }}
+      monitoringService: {{ properties.monitoringService }}
+      ipAllocationPolicy:
+        useIpAliases: true
+        clusterSecondaryRangeName: "pods"
+        servicesSecondaryRangeName: "services"
+      masterAuth:
+        clientCertificateConfig:
+          issueClientCertificate: false
+      masterAuthorizedNetworksConfig:
+        enabled: {{ properties.masterAuthorizedNetworks | length > 0 }}
+        {% if properties.masterAuthorizedNetworks %}
+        cidrBlocks:
+          {% for authorizedNetwork in properties.masterAuthorizedNetworks %}
+          - name: {{ authorizedNetwork.name }}
+            cidrBlock: {{ authorizedNetwork.cidrBlock }}
+          {% endfor %}
+        {% endif %}
+      addonsConfig:
+        httpLoadBalancing:
+          disabled: true
+        horizontalPodAutoscaling:
+          disabled: false
+        kubernetesDashboard:
+          disabled: true
+        networkPolicyConfig:
+          disabled: true
+      {% if properties.mode == 'CREATE' %}
+      nodePools:
+        - name: initial-gke-node-pool
+          initialNodeCount: 0
+      {% endif %}
+  metadata:
+    dependsOn:
+      - {{ env.project }}-patch-iam-policy
+
+{% if properties.mode == 'UPDATE' %}
+
+{% for nodePool in properties.nodePools %}
+- name: {{ properties.name }}-{{ nodePool.name }}-gke-node-pool
+{% if properties.type == 'REGIONAL' %}
+  type: gcp-types/container-v1:projects.locations.clusters.nodePools
+  properties:
+    parent: {{ "projects/{}/locations/{}/clusters/{}".format(
+      env.project, properties.network.location, properties.name
+    )}}
+{% elif properties.type == 'LOCAL' %}
+  type: gcp-types/container-v1:projects.zones.clusters.nodePools
+  properties:
+    parent: {{ "projects/{}/zones/{}/clusters/{}".format(
+      env.project, properties.network.location, properties.name
+    )}}
+    zone: {{ properties.network.location }}
+{% endif %}
+    clusterId: {{ properties.name }}
+    nodePool:
+      name: {{ nodePool.name }}-pool
+      version: {{ nodePool.version | default (properties.initialVersion) }}
+      initialNodeCount: {{ nodePool.initialNodeCount }}
+    {% if nodePool.autoscaling %}
+      autoscaling:
+        enabled: true
+        minNodeCount: {{ nodePool.minNodeCount }}
+        maxNodeCount: {{ nodePool.maxNodeCount }}
+    {% endif %}
+      config:
+        machineType: {{ nodePool.machineType }}
+        imageType: "COS"
+        diskType: "pd-standard"
+        diskSizeGb: {{ nodePool.diskSizeGb }}
+        preemptible: {{ nodePool.preemptible }}
+        serviceAccount: $(ref.{{ properties.name }}-gke-nodes-sa.email)
+        oauthScopes:
+          - https://www.googleapis.com/auth/compute
+          - https://www.googleapis.com/auth/devstorage.read_only
+          - https://www.googleapis.com/auth/logging.write
+          - https://www.googleapis.com/auth/monitoring
+          - https://www.googleapis.com/auth/servicecontrol
+          - https://www.googleapis.com/auth/service.management.readonly
+        tags: {{ nodePool.tags }}
+        {% if nodePool.taints %}
+        taints:
+          {% for taint in nodePool.taints %}
+          - key: {{ taint.key }}
+            value: "{{ taint.value }}"
+            effect: {{ taint.effect }}
+          {% endfor %}
+        {% endif %}
+  metadata:
+    dependsOn:
+      - {{ properties.name }}
+      - {{ properties.name }}-gke-nodes-sa
+{% endfor %}
+
+{% endif %}
+
+{% set K8S_ENDPOINTS = {
+    'v1': 'api/v1',
+    'apps-v1beta1': 'apis/apps/v1beta1',
+    'extensions-v1beta1': 'apis/extensions/v1beta1',
+    'rbac-v1': 'apis/rbac.authorization.k8s.io/v1',
+  }
+%}
+
+{% for typeSuffix, endpoint in K8S_ENDPOINTS.iteritems() %}
+- name: k8s-{{ typeSuffix }}-type
+  type: deploymentmanager.v2beta.typeProvider
+  properties:
+    options:
+      validationOptions:
+        schemaValidation: IGNORE_WITH_WARNINGS
+      inputMappings:
+      - fieldName: name
+        location: PATH
+        methodMatch: ^(GET|DELETE|PUT)$
+        value: $.ifNull($.resource.properties.metadata.name, $.resource.name)
+      - fieldName: metadata.name
+        location: BODY
+        methodMatch: ^(PUT|POST)$
+        value: $.ifNull($.resource.properties.metadata.name, $.resource.name)
+      - fieldName: Authorization
+        location: HEADER
+        value: >
+          $.concat("Bearer ", $.googleOauth2AccessToken())
+    descriptorUrl: https://$(ref.{{ properties.name }}.endpoint)/swaggerapi/{{ endpoint }}
+  metadata:
+    dependsOn:
+      - {{ properties.name }}
+{% endfor %}
+
+{% set K8S_CONFIGMAPS_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps' %}
+
+{% if properties.network.nonMasqueradeCIDRs %}
+- name: k8s-ip-masq-agent-configmap
+  type: {{ env.project }}/k8s-v1-type:{{ K8S_CONFIGMAPS_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: ConfigMap
+    namespace: kube-system
+    metadata:
+      name: ip-masq-agent
+      namespace: kube-system
+    data:
+      config: |
+        nonMasqueradeCIDRs:
+          - {{ properties.network.nonMasqueradeCIDRs }}
+        resyncInterval: 60s
+  metadata:
+    dependsOn:
+      - k8s-v1-type
+{% endif %}
+
+outputs:
+  - name: project
+    value: {{ env.project }}
+  - name: name
+    value: $(ref.{{ properties.name }}.name)
+  - name: nodes-sa
+    value: $(ref.{{ properties.name }}-gke-nodes-sa.email)
+  - name: endpoint
+    value: $(ref.{{ properties.name }}.endpoint)

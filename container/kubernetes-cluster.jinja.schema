@@ -1,0 +1,230 @@
+info:
+  title: GKE Cluster
+  author: Rael Garcia <me@rael.io>
+  description: Creates a Google Kubernetes Engine Cluster
+  version: 1.0
+
+required:
+- name
+- network
+- nodePools
+
+additionalProperties: false
+
+properties:
+
+  name:
+    type: string
+    description: >
+      The name of this cluster.
+    pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+
+  description:
+    type: string
+    description: >
+      An optional description of this cluster.
+
+  type:
+    enum:
+      - LOCAL
+      - REGIONAL
+    default: REGIONAL
+    description: >
+      Cluster type, can be REGIONAL (multi-zone) or LOCAL (single zone)
+
+  initialVersion:
+    type: string
+    description: >
+      The initial Kubernetes version for this cluster.
+      https://cloud.google.com/kubernetes-engine/release-notes
+    default: 1.11.2-gke.18
+
+  loggingService:
+    enum:
+      - none
+      - logging.googleapis.com
+      - logging.googleapis.com/kubernetes
+    description: >
+      The logging service the cluster should use to write logs.
+    default: none
+
+  monitoringService:
+    enum:
+      - none
+      - monitoring.googleapis.com
+      - monitoring.googleapis.com/kubernetes
+    description: The monitoring service the cluster should use to write metrics.
+    default: none
+
+  masterAuthorizedNetworks:
+    type: array
+    default: []
+    items:
+      type: object
+      description: >
+        cidrBlocks define up to 10 external networks that could access Kubernetes master through HTTPS.
+      required:
+        - name
+        - cidrBlock
+      properties:
+        name:
+          type: string
+          description: >
+            displayName is an optional field for users to identify CIDR blocks.
+        cidrBlock:
+          type: string
+          description: >
+            cidrBlock must be specified in CIDR notation.
+          pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
+
+  network:
+    type: object
+    additionalProperties: false
+    description: Network configuration for the Cluster.
+    required:
+      - vpc
+      - location
+      - subnet
+    properties:
+      vpc:
+        type: string
+        description: >
+          The name of the Google Compute Engine network to which the cluster is connected.
+        default: base-net
+        pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+      location:
+        type: string
+        description: >
+          The name of the Google Compute Engine zone or region in which the cluster resides.
+        default: europe-west1
+        pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+      subnet:
+        type: string
+        description: >
+          The name of the Google Compute Engine subnetwork to which the cluster is connected.
+      nonMasqueradeCIDRs:
+        type: string
+        description: >
+          IP masquerading is a form of network address translation (NAT) used to perform many-to-one IP address translations.
+          https://cloud.google.com/kubernetes-engine/docs/how-to/ip-masquerade-agent
+        pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
+
+
+  nodePools:
+    type: array
+    default: []
+    items:
+      type: object
+      description: >
+        List of node pools for the GKE cluster.
+      additionalProperties: false
+      required:
+        - name
+        - initialNodeCount
+        - minNodeCount
+        - maxNodeCount
+        - machineType
+        - preemptible
+        - diskSizeGb
+      properties:
+        name:
+          type: string
+          description: >
+            Name of the node pool.
+        initialNodeCount:
+          type: number
+          description: >
+            Initial number of nodes for the Node Pool.
+          default: 1
+        autoscaling:
+          type: boolean
+          description: >
+            Enable autoscaling
+          default: true
+        minNodeCount:
+          type: number
+          description: >
+            Minimum number of nodes for the Node Pool.
+          default: 1
+          minimum: 1
+          maximum: 5
+        maxNodeCount:
+          type: number
+          description: >
+            Minimum number of nodes for the Node Pool.
+          default: 2
+          minimum: 1
+          maximum: 20
+        machineType:
+          type: string
+          description: >
+            The name of a Google Compute Engine machine type.
+          default: f1-micro
+          pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+        preemptible:
+          type: boolean
+          default: true
+          description: >
+            Whether the nodes are created as preemptible VM instances.
+            For more information about preemptible VM instances:
+            https://cloud.google.com/compute/docs/instances/preemptible.
+        diskSizeGb:
+          type: number
+          description: >
+            Size of the disk attached to each node, specified in GB.
+            The smallest allowed disk size is 10GB (default value).
+          default: 10
+        tags:
+          type: array
+          description: >
+            The list of instance tags applied to all nodes. Tags are used to
+            identify valid sources or targets for network firewalls and are
+            specified by the client during custer or node pool creation.
+          default: [] 
+          items:
+            type: string
+            description: Tag.
+            pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+        taints:
+          type: array
+          description: >
+            Taints allow a node to repel a set of pods.
+            https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+                description: Key for taint.
+              value:
+                type:
+                  - string
+                  - boolean
+                description: Value for taint.
+                default: true
+              effect:
+                enum:
+                  - EFFECT_UNSPECIFIED
+                  - NO_SCHEDULE
+                  - PREFER_NO_SCHEDULE
+                  - NO_EXECUTE
+                description: >
+                  Possible values for Effect in taint.
+                    EFFECT_UNSPECIFIED  Not set
+                    NO_SCHEDULE	        NoSchedule
+                    PREFER_NO_SCHEDULE  PreferNoSchedule
+                    NO_EXECUTE          NoExecute
+                    https://cloud.google.com/kubernetes-engine/docs/how-to/node-taints
+                  default: NO_SCHEDULE
+
+  mode:
+    type: string
+    description: >
+      Due to a known bug, the cluster cannot be updated with Deployment Manager
+      that's why the node pool is created as a separate resource. The problem is
+      that the cluster needs an initial node pool as part of the deploy. This flag
+      will create a initial node pool during when is set to `CREATE` mode. The
+      default value is `UPDATE`, so the attribute can be removed after creation.
+      https://issuetracker.google.com/issues/118997490
+    pattern: (CREATE|UPDATE)
+    default: UPDATE
