@@ -70,7 +70,9 @@ resources:
       locations:
         - {{ properties.network.location }}
 {% endif %}
+{% if properties.initialVersion %}
       initialClusterVersion: {{ properties.initialVersion }}
+{% endif %}
       loggingService: {{ properties.monitoringService }}
       monitoringService: {{ properties.monitoringService }}
       ipAllocationPolicy:
@@ -128,7 +130,9 @@ resources:
     clusterId: {{ properties.name }}
     nodePool:
       name: {{ nodePool.name }}-pool
+    {% if nodePool.version or properties.initialVersion %}
       version: {{ nodePool.version | default (properties.initialVersion) }}
+    {% endif %}
       initialNodeCount: {{ nodePool.initialNodeCount }}
     {% if nodePool.autoscaling %}
       autoscaling:
