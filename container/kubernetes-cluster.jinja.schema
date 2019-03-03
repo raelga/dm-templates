@@ -89,7 +89,6 @@ properties:
         type: string
         description: >
           The name of the Google Compute Engine network to which the cluster is connected.
-        default: base-net
         pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
       location:
         type: string
