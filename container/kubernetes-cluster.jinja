@@ -59,7 +59,7 @@ resources:
 {% endif %}
     cluster:
       name: {{ properties.name }}
-      network: {{ properties.network.vpc }}
+      network: {{ properties.network.name }}
       subnetwork: {{ properties.network.subnet }}
 {% if properties.type == 'REGIONAL' %}
       locations:
