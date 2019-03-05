@@ -106,7 +106,13 @@ properties:
           IP masquerading is a form of network address translation (NAT) used to perform many-to-one IP address translations.
           https://cloud.google.com/kubernetes-engine/docs/how-to/ip-masquerade-agent
         pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
-
+      dns:
+        enum:
+          - coreDNS
+          - kube-dns
+        default: kube-dns
+        description: >
+          The name of the Kubernetes DNS.
 
   nodePools:
     type: array
