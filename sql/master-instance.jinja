@@ -1,0 +1,53 @@
+
+resources:
+- name: {{ name }}
+  type: sqladmin.v1beta4.instance
+  properties:
+    backendType: {{ properties['backendType'] }}
+    instanceType: {{ properties['instanceType'] }}
+    databaseVersion: {{ properties['databaseVersion'] }}
+    region: {{ properties['region'] }}
+    settings:
+      {# General #}
+      tier: {{ properties['tier'] }}
+      activationPolicy: {{ properties['activationPolicy'] }}
+      pricingPlan: {{ properties['pricingPlan'] }}
+      {# Location #}
+      locationPreference:
+        zone: {{ properties['zone'] }}
+      {# Connectivity #}
+      ipConfiguration:
+        ipv4Enabled: {{ properties['publicIp'] }}
+        {% if properties['authorizedNetworks'] %}
+        authorizedNetworks:
+          {% for authorizedNetwork in properties['authorizedNetworks'] %}
+          - name: {{ authorizedNetwork.name }}
+            cidrBlock: {{ authorizedNetwork.cidrBlock }}
+          {% endfor %}
+        {% endif %}
+        {% if properties['privateIp'] %}
+        privateNetwork: {{ "projects/{}/global/networks/{}".format(
+          env['project'], properties['privateNetwork']
+        ) }}
+        {% endif %}
+      {# Storage #}
+      dataDiskSizeGb: {{ properties['dataDiskSizeGb'] }}
+      dataDiskType: {{ properties['dataDiskType'] }}
+      storageAutoResize: {{ properties['storageAutoResize'] }}
+      storageAutoResizeLimit: {{ properties['storageAutoResizeLimit'] }}
+      {# Database Flags #}
+      {% if properties['databaseFlags'] %}
+      databaseFlags: {{ properties['databaseFlags'] }}
+      {% endif %}
+      {# Maintenance #}
+      maintenanceWindow:
+        day: {{ properties['maintenanceWindowDay'] }}
+        hour: {{ properties['maintenanceWindowTime'] }}
+        updateTrack: {{ properties['maintenanceWindowUpdateTrack'] }}
+      {# Backup #}
+      {% if properties['backupEnabled'] %}
+      backupConfiguration:
+        enabled: {{ properties['backupEnabled'] }}
+        binaryLogEnabled: true
+        startTime: {{ properties['backupStartTime'] }}
+      {% endif %}
