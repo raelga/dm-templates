@@ -1,0 +1,113 @@
+info:
+  title: A template for creating a pool of similar instances in a zone.
+  author: Google, Inc.
+  description: |
+    This template lets users create a collection of instances of a given type,
+    number and zone. This can also be achieved using InstanceGroupManager, but
+    this templates does it without using one.
+
+    NOTE: Unlike InstanceGroupManager pools, this pool does not re-create
+    instances upon failure or termination to keep up with the target pool
+    size.
+
+properties:
+
+  description:
+    type: string
+    description: >
+      An optional description of this resource. Provide this property when you create the resource.
+
+  region:
+    type: string
+    default: europe-west1
+    description: >
+      The region where the instance resides.
+
+  zone:
+    type: string
+    default: europe-west1-b
+    description: >
+      The zone where the instance resides.
+
+  subnetwork:
+    type: string
+    default: compute-sn
+    description: >
+      The subnetwork where the network interface will be attached.
+
+  bootDiskImage:
+    type: string
+    default: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-9
+    description: >
+      The source image to create the instance boot disk.
+
+  bootDiskSizeGb:
+    type: integer
+    minimum: 10
+    maximum: 100
+    default: 10
+    description: >
+      Specifies the size of the disk in base-2 GB.
+
+  machineType:
+    type: string
+    default: f1-micro
+    descripton: >
+      Full or partial URL of the machine type resource to use for this instance,
+      in the format: zones/zone/machineTypes/machine-type.
+
+  reservedPublicAddress:
+    type: boolean
+    default: false
+    description: >
+      Attach an ephemeral instance public IP address.
+
+  ephemeralPublicAddress:
+    type: boolean
+    default: false
+    description: >
+      Attach an ephemeral instance public IP address.
+
+  deletionProtection:
+    type: boolean
+    default: true
+    description: >
+      Whether the resource should be protected against deletion.
+
+  canIpForward:
+    type: boolean
+    default: false
+    description: >
+      Allows this instance to send and receive packets with non-matching
+      destination or source IPs. This is required if you plan to use this
+      instance to forward routes. For more information:
+        https://cloud.google.com/vpc/docs/using-routes#canipforward
+
+  preemptible:
+    type: boolean
+    default: false
+    description: >
+      Defines whether the instance is preemptible.
+      This can only be set during instance creation, it cannot be set or
+      changed after the instance has been created.
+
+  onHostMaintenance:
+    enum:
+      - MIGRATE
+      - TERMINATE
+    default: MIGRATE
+    description: >
+      Defines the maintenance behavior for this instance.
+      For standard instances, the default behavior is MIGRATE.
+      For preemptible instances, the only possible behavior is TERMINATE.
+      For more information, see Setting Instance Scheduling Options:
+        https://cloud.google.com/compute/docs/instances/setting-instance-scheduling-options
+
+  automaticRestart:
+    type: boolean
+    default: true
+    description: >
+      Specifies whether the instance should be automatically restarted if it
+      is terminated by Compute Engine (not terminated by a user).
+      You can only set the automatic restart option for standard instances.
+      Preemptible instances cannot be automatically restarted.
