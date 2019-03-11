@@ -1,0 +1,20 @@
+resources:
+
+  - type: compute.v1.address
+    name: {{ properties["name"] }}-address
+    properties:
+      name: {{ properties["name"] }}
+      region: {{ properties["region"] }}
+      address: {{ properties["address"] }}
+      prefixLength: {{ properties["prefixLength"] }}
+      addressType: {{ properties["addressType"] }}
+      {% if properties["purpose"] %}
+      purpose: {{ properties["purpose"] }}
+      {% endif %}
+      {% if properties["network"] %}
+      network: {{ properties["network"] }}
+      {% endif %}
+      {% if properties["subnetwork"] %}
+      subnetwork: {{ properties["subnetwork"] }}
+      {% endif %}
+      description: {{ properties["description"] }}
