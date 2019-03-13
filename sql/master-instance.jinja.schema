@@ -263,3 +263,31 @@ properties:
             The value of the flag.
             Booleans should be set to on for true and off for false.
             This field must be omitted if the flag doesn't take a value.
+
+  databases:
+    type: array
+    description: >
+      List of databases to deploy onto the CloudSQL instance.
+    items:
+      type: object
+      required:
+        - name
+        - charset
+        - collation
+      properties:
+        name:
+          type: string
+          pattern: ^[0-9a-zA-Z$_]+$
+          description: >
+            The name of the database in the Cloud SQL instance.
+            This does not include the project ID or instance name.
+        charset:
+          type: string
+          default: utf8
+          description: >
+            The MySQL charset value.
+        collation:
+          type: string
+          default: ''
+          description: >
+            The MySQL collation value.

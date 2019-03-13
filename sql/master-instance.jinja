@@ -1,5 +1,6 @@
 
 resources:
+
 - name: {{ name }}
   type: sqladmin.v1beta4.instance
   properties:
@@ -51,3 +52,17 @@ resources:
         binaryLogEnabled: true
         startTime: {{ properties['backupStartTime'] }}
       {% endif %}
+
+{% for database in properties['databases'] %}
+- name: {{ name }}-db-{{ database['name'] }}
+  type: sqladmin.v1beta4.database
+  properties:
+    instance: $(ref.{{ name }}.name)
+    name: {{ database['name'] }}
+    charset: {{ database['charset'] }}
+  {% if loop.index != loop.length %}
+  metadata:
+    dependsOn:
+      - {{ name }}-db-{{ properties['databases'][loop.index]['name'] }}
+  {% endif %}
+{% endfor %}
