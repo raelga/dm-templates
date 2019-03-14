@@ -38,6 +38,9 @@ resources:
         - role: {{ binding.role }}
           members: {{ binding.members }}
         {% endfor %}
+    metadata:
+      dependsOn:
+        - {{ properties['name'] }}
 
 {% for ac in properties['acl'] %}
   - name: {{ ac.name }}-acl
