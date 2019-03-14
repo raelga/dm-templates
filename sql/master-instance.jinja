@@ -54,7 +54,7 @@ resources:
       {% endif %}
 
 {% for database in properties['databases'] %}
-- name: {{ name }}-db-{{ database['name'] }}
+- name: {{ name }}-{{ database['name'] }}-db
   type: sqladmin.v1beta4.database
   properties:
     instance: $(ref.{{ name }}.name)
@@ -63,6 +63,19 @@ resources:
   {% if loop.index != loop.length %}
   metadata:
     dependsOn:
-      - {{ name }}-db-{{ properties['databases'][loop.index]['name'] }}
+      - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
   {% endif %}
 {% endfor %}
+
+- name: {{ name }}-kms-kr
+  type: gcp-types/cloudkms-v1:projects.locations.keyRings
+  properties:
+    parent: projects/{{ env["project"] }}/locations/{{ properties["region"] }}
+    keyRingId: {{ name }}-kms-kr
+
+- name: {{ name }}-kms-ck
+  type: gcp-types/cloudkms-v1:projects.locations.keyRings.cryptoKeys
+  properties:
+    parent: $(ref.{{ name }}-kms-kr.name)
+    cryptoKeyId:  {{ name }}-users-kms-ck
+    purpose: ENCRYPT_DECRYPT
