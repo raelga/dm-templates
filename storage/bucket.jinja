@@ -24,9 +24,11 @@ resources:
           members:
             - projectEditor:{{ env['project'] }}
             - projectOwner:{{ env['project'] }}
+        {% if not properties['disableViewer'] %}
         - role: roles/storage.legacyBucketReader
           members:
             - projectViewer:{{ env['project'] }}
+        {% endif %}
         {% if properties["websiteConfig"] %}
         - role: roles/storage.objectViewer
           members:

@@ -26,7 +26,12 @@ properties:
     type: string
     default: europe-west1
     description: Region / Zone were the bucket will be deployed.
-  
+
+  disableViewer:
+    type: boolean
+    default: false
+    description: Disables legacy read permissions for project viewers
+
   bindings:
     type: array
     description: >
