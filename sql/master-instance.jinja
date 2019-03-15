@@ -73,9 +73,29 @@ resources:
     parent: projects/{{ env["project"] }}/locations/{{ properties["region"] }}
     keyRingId: {{ name }}-kms-kr
 
-- name: {{ name }}-kms-ck
+- name: {{ name }}-users-kms-ck
   type: gcp-types/cloudkms-v1:projects.locations.keyRings.cryptoKeys
   properties:
     parent: $(ref.{{ name }}-kms-kr.name)
-    cryptoKeyId:  {{ name }}-users-kms-ck
+    cryptoKeyId: {{ name }}-users-kms-ck
     purpose: ENCRYPT_DECRYPT
+
+- name: {{ name }}-root-pass
+  action: gcp-types/cloudkms-v1:cloudkms.projects.locations.keyRings.cryptoKeys.decrypt
+  properties:
+    name: $(ref.{{ name }}-users-kms-ck.name)
+    ciphertext: {{ properties.root.pass }}
+
+{% if properties['root'] %}
+- name: {{ name }}-root-db-user
+  type: sqladmin.v1beta4.user
+  properties:
+    name: root
+    host: "{{ properties['root']['host'] }}"
+    instance: $(ref.{{ name }}.name)
+    password: $(ref.{{ name }}-root-pass.plaintext)
+  metadata:
+    dependsOn:
+      - {{ name }}-root-pass
+      - {{ name }}
+{% endif %}
