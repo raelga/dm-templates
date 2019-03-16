@@ -94,22 +94,35 @@ resources:
     cryptoKeyId: {{ name }}-users-kms-ck
     purpose: ENCRYPT_DECRYPT
 
-- name: {{ name }}-root-pass
+{% for admin in properties['admins'] %}
+
+{% if admin.pass %}
+- name: {{ name }}-{{ admin.name }}-db-user-pass
   action: gcp-types/cloudkms-v1:cloudkms.projects.locations.keyRings.cryptoKeys.decrypt
   properties:
     name: $(ref.{{ name }}-users-kms-ck.name)
-    ciphertext: {{ properties.root.pass }}
+    ciphertext: {{ admin.pass }}
+  metadata:
+    runtimePolicy:
+      - UPDATE_ON_CHANGE
+{% endif %}
 
-{% if properties['root'] %}
-- name: {{ name }}-root-db-user
+- name: {{ name }}-{{ admin.name }}-db-user
   type: sqladmin.v1beta4.user
   properties:
-    name: root
-    host: "{{ properties['root']['host'] }}"
     instance: $(ref.{{ name }}.name)
-    password: $(ref.{{ name }}-root-pass.plaintext)
+    name: {{ admin.name }}
+    host: "{{ admin.host }}"
+  {% if admin.pass %}
+    password: $(ref.{{ name }}-{{ admin.name }}-db-user-pass.plaintext)
+  {% endif %}
   metadata:
     dependsOn:
-      - {{ name }}-root-pass
       - {{ name }}
+  {% if admin.pass %}
+      - {{ name }}-{{ admin.name }}-db-user-pass
+  {% endif %}
+  {% if loop.index != loop.length %}
+      - {{ name }}-{{ properties['admins'][loop.index]['name'] }}-db-user
 {% endif %}
+{% endfor %}
