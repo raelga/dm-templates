@@ -207,6 +207,12 @@ properties:
     decription: >
       Enables the daily backup configuration for the instance.
 
+  binaryLogEnabled:
+    type: boolean
+    default: true
+    decription: >
+      Enables the binary logs for point in time recovery.
+
   backupStartTime:
     type: string
     default: 03:00

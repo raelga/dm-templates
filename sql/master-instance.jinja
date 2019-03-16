@@ -50,7 +50,7 @@ resources:
       {% if properties['backupEnabled'] %}
       backupConfiguration:
         enabled: {{ properties['backupEnabled'] }}
-        binaryLogEnabled: true
+        binaryLogEnabled: {{ properties['binaryLogEnabled'] }}
         startTime: {{ properties['backupStartTime'] }}
       {% endif %}
 
