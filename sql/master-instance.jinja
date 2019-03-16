@@ -1,9 +1,10 @@
 
 resources:
 
-- name: {{ name }}
+- name: {{ name }}-master
   type: sqladmin.v1beta4.instance
   properties:
+    name: {{ name }}
     backendType: {{ properties['backendType'] }}
     instanceType: {{ properties['instanceType'] }}
     databaseVersion: {{ properties['databaseVersion'] }}
@@ -49,20 +50,41 @@ resources:
       {% if properties['backupEnabled'] %}
       backupConfiguration:
         enabled: {{ properties['backupEnabled'] }}
-        binaryLogEnabled: true
+        binaryLogEnabled: {{ properties['binaryLogEnabled'] }}
         startTime: {{ properties['backupStartTime'] }}
       {% endif %}
+
+{% if properties['deleteDefaultRootUser'] %}
+- name: delete-{{ name }}-root-default-db-user
+  action: gcp-types/sqladmin-v1beta4:sql.users.delete
+  properties:
+    name: root
+    host: '%'
+    instance: $(ref.{{ name }}-master.name)
+  metadata:
+    runtimePolicy:
+      - CREATE
+    dependsOn:
+      - {{ name }}-master
+{% endif %}
 
 {% for database in properties['databases'] %}
 - name: {{ name }}-{{ database['name'] }}-db
   type: sqladmin.v1beta4.database
   properties:
-    instance: $(ref.{{ name }}.name)
+    instance: $(ref.{{ name }}-master.name)
     name: {{ database['name'] }}
     charset: {{ database['charset'] }}
-  {% if loop.index != loop.length %}
   metadata:
     dependsOn:
+      - {{ name }}-master
+  {% if properties['deleteDefaultRootUser'] %}
+      - delete-{{ name }}-root-default-db-user
+  {% endif %}
+  {% for admin in properties['admins'] %}
+      - {{ name }}-{{ admin.name }}-db-user
+  {% endfor %}
+  {% if loop.index != loop.length %}
       - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
   {% endif %}
 {% endfor %}
@@ -79,23 +101,42 @@ resources:
     parent: $(ref.{{ name }}-kms-kr.name)
     cryptoKeyId: {{ name }}-users-kms-ck
     purpose: ENCRYPT_DECRYPT
+  metadata:
+    dependsOn:
+      - {{ name }}-kms-kr
 
-- name: {{ name }}-root-pass
+{% for admin in properties['admins'] %}
+
+{% if admin.pass %}
+- name: {{ name }}-{{ admin.name }}-db-user-pass
   action: gcp-types/cloudkms-v1:cloudkms.projects.locations.keyRings.cryptoKeys.decrypt
   properties:
     name: $(ref.{{ name }}-users-kms-ck.name)
-    ciphertext: {{ properties.root.pass }}
+    ciphertext: {{ admin.pass }}
+  metadata:
+    runtimePolicy:
+      - UPDATE_ON_CHANGE
+{% endif %}
 
-{% if properties['root'] %}
-- name: {{ name }}-root-db-user
+- name: {{ name }}-{{ admin.name }}-db-user
   type: sqladmin.v1beta4.user
   properties:
-    name: root
-    host: "{{ properties['root']['host'] }}"
-    instance: $(ref.{{ name }}.name)
-    password: $(ref.{{ name }}-root-pass.plaintext)
+    instance: $(ref.{{ name }}-master.name)
+    name: {{ admin.name }}
+    host: "{{ admin.host }}"
+  {% if admin.pass %}
+    password: $(ref.{{ name }}-{{ admin.name }}-db-user-pass.plaintext)
+  {% endif %}
   metadata:
     dependsOn:
-      - {{ name }}-root-pass
-      - {{ name }}
-{% endif %}
+      - {{ name }}-master
+  {% if admin.pass %}
+      - {{ name }}-{{ admin.name }}-db-user-pass
+  {% endif %}
+  {% if properties['deleteDefaultRootUser'] %}
+      - delete-{{ name }}-root-default-db-user
+  {% endif %}
+  {% if loop.index != loop.length %}
+      - {{ name }}-{{ properties['admins'][loop.index]['name'] }}-db-user
+  {% endif %}
+{% endfor %}
