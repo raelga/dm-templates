@@ -116,3 +116,5 @@ outputs:
     value: $(ref.{{ name }}-internal-address.address)
   - name: externalAddress
     value: $(ref.{{ name }}-external-address.address)
+  - name: serviceAccount
+    value: $(ref.{{ name }}-instance-sa.email)
