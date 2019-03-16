@@ -75,10 +75,16 @@ resources:
     instance: $(ref.{{ name }}-master.name)
     name: {{ database['name'] }}
     charset: {{ database['charset'] }}
-  {% if loop.index != loop.length %}
   metadata:
     dependsOn:
       - {{ name }}-master
+  {% if properties['deleteDefaultRootUser'] %}
+      - delete-{{ name }}-root-default-db-user
+  {% endif %}
+  {% for admin in properties['admins'] %}
+      - {{ name }}-{{ admin.name }}-db-user
+  {% endfor %}
+  {% if loop.index != loop.length %}
       - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
   {% endif %}
 {% endfor %}
@@ -95,6 +101,9 @@ resources:
     parent: $(ref.{{ name }}-kms-kr.name)
     cryptoKeyId: {{ name }}-users-kms-ck
     purpose: ENCRYPT_DECRYPT
+  metadata:
+    dependsOn:
+      - {{ name }}-kms-kr
 
 {% for admin in properties['admins'] %}
 
@@ -124,7 +133,10 @@ resources:
   {% if admin.pass %}
       - {{ name }}-{{ admin.name }}-db-user-pass
   {% endif %}
+  {% if properties['deleteDefaultRootUser'] %}
+      - delete-{{ name }}-root-default-db-user
+  {% endif %}
   {% if loop.index != loop.length %}
       - {{ name }}-{{ properties['admins'][loop.index]['name'] }}-db-user
-{% endif %}
+  {% endif %}
 {% endfor %}
