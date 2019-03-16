@@ -53,6 +53,20 @@ resources:
         startTime: {{ properties['backupStartTime'] }}
       {% endif %}
 
+{% if properties['deleteDefaultRootUser'] %}
+- name: delete-{{ name }}-root-default-db-user
+  action: gcp-types/sqladmin-v1beta4:sql.users.delete
+  properties:
+    name: root
+    host: '%'
+    instance: $(ref.{{ name }}.name)
+  metadata:
+    runtimePolicy:
+      - CREATE
+    dependsOn:
+      - {{ name }}
+{% endif %}
+
 {% for database in properties['databases'] %}
 - name: {{ name }}-{{ database['name'] }}-db
   type: sqladmin.v1beta4.database
