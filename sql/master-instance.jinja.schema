@@ -4,7 +4,16 @@ info:
   description: Creates a Google Cloud Platform Cloud SQL instance
   version: 1.0
 
+required:
+  - name
+
 properties:
+
+  name:
+    type: string
+    pattern: ^[0-9a-zA-Z_]+$
+    description: >
+      Cloud SQL instance name.
 
   tier:
     type: string

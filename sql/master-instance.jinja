@@ -1,9 +1,10 @@
 
 resources:
 
-- name: {{ name }}
+- name: {{ name }}-master
   type: sqladmin.v1beta4.instance
   properties:
+    name: {{ name }}
     backendType: {{ properties['backendType'] }}
     instanceType: {{ properties['instanceType'] }}
     databaseVersion: {{ properties['databaseVersion'] }}
@@ -59,24 +60,25 @@ resources:
   properties:
     name: root
     host: '%'
-    instance: $(ref.{{ name }}.name)
+    instance: $(ref.{{ name }}-master.name)
   metadata:
     runtimePolicy:
       - CREATE
     dependsOn:
-      - {{ name }}
+      - {{ name }}-master
 {% endif %}
 
 {% for database in properties['databases'] %}
 - name: {{ name }}-{{ database['name'] }}-db
   type: sqladmin.v1beta4.database
   properties:
-    instance: $(ref.{{ name }}.name)
+    instance: $(ref.{{ name }}-master.name)
     name: {{ database['name'] }}
     charset: {{ database['charset'] }}
   {% if loop.index != loop.length %}
   metadata:
     dependsOn:
+      - {{ name }}-master
       - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
   {% endif %}
 {% endfor %}
@@ -110,7 +112,7 @@ resources:
 - name: {{ name }}-{{ admin.name }}-db-user
   type: sqladmin.v1beta4.user
   properties:
-    instance: $(ref.{{ name }}.name)
+    instance: $(ref.{{ name }}-master.name)
     name: {{ admin.name }}
     host: "{{ admin.host }}"
   {% if admin.pass %}
@@ -118,7 +120,7 @@ resources:
   {% endif %}
   metadata:
     dependsOn:
-      - {{ name }}
+      - {{ name }}-master
   {% if admin.pass %}
       - {{ name }}-{{ admin.name }}-db-user-pass
   {% endif %}
