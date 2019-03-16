@@ -1,6 +1,8 @@
 
 resources:
 
+{# CloudSQL master instance #}
+
 - name: {{ name }}-master
   type: sqladmin.v1beta4.instance
   properties:
@@ -54,6 +56,8 @@ resources:
         startTime: {{ properties['backupStartTime'] }}
       {% endif %}
 
+{# Default root user deletion #}
+
 {% if properties['deleteDefaultRootUser'] %}
 - name: delete-{{ name }}-root-default-db-user
   action: gcp-types/sqladmin-v1beta4:sql.users.delete
@@ -68,26 +72,7 @@ resources:
       - {{ name }}-master
 {% endif %}
 
-{% for database in properties['databases'] %}
-- name: {{ name }}-{{ database['name'] }}-db
-  type: sqladmin.v1beta4.database
-  properties:
-    instance: $(ref.{{ name }}-master.name)
-    name: {{ database['name'] }}
-    charset: {{ database['charset'] }}
-  metadata:
-    dependsOn:
-      - {{ name }}-master
-  {% if properties['deleteDefaultRootUser'] %}
-      - delete-{{ name }}-root-default-db-user
-  {% endif %}
-  {% for admin in properties['admins'] %}
-      - {{ name }}-{{ admin.name }}-db-user
-  {% endfor %}
-  {% if loop.index != loop.length %}
-      - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
-  {% endif %}
-{% endfor %}
+{# Google KMS for decrypting passwords #}
 
 - name: {{ name }}-kms-kr
   type: gcp-types/cloudkms-v1:projects.locations.keyRings
@@ -104,6 +89,8 @@ resources:
   metadata:
     dependsOn:
       - {{ name }}-kms-kr
+
+{# Privileged users creations #}
 
 {% for admin in properties['admins'] %}
 
@@ -138,5 +125,28 @@ resources:
   {% endif %}
   {% if loop.index != loop.length %}
       - {{ name }}-{{ properties['admins'][loop.index]['name'] }}-db-user
+  {% endif %}
+{% endfor %}
+
+{# Databases #}
+
+{% for database in properties['databases'] %}
+- name: {{ name }}-{{ database['name'] }}-db
+  type: sqladmin.v1beta4.database
+  properties:
+    instance: $(ref.{{ name }}-master.name)
+    name: {{ database['name'] }}
+    charset: {{ database['charset'] }}
+  metadata:
+    dependsOn:
+      - {{ name }}-master
+  {% if properties['deleteDefaultRootUser'] %}
+      - delete-{{ name }}-root-default-db-user
+  {% endif %}
+  {% for admin in properties['admins'] %}
+      - {{ name }}-{{ admin.name }}-db-user
+  {% endfor %}
+  {% if loop.index != loop.length %}
+      - {{ name }}-{{ properties['databases'][loop.index]['name'] }}-db
   {% endif %}
 {% endfor %}
