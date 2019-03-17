@@ -179,6 +179,9 @@ resources:
       kind: sql#importContext
       fileType: {{ importContext.type }}
       uri: gs://{{ importContext.bucket }}/{{ importContext.file }}
+      {% if importContext.database %}
+      database: {{ importContext.database }}
+      {% endif %}
   metadata:
     runtimePolicy:
       - CREATE
