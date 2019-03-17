@@ -111,6 +111,27 @@ resources:
 {% endfor %}
 {% endif %}
 
+{% for fw in properties['firewall'] %}
+- name: {{ name }}-{{ fw.policy }}-{{ fw.name }}-fw
+  type: compute.v1.firewall
+  properties:
+    network: {{ "projects/{}/global/networks/{}".format(
+      env['project'], properties['network']
+    ) }}
+    {% if fw.sourceRanges %}
+    sourceRanges: {{ fw.sourceRanges }}
+    {% endif %}
+    targetTags:
+      - {{ name }}-instance
+    {% if fw.policy == 'allow' %}
+    allowed:
+    {% else %}
+    denied:
+    {% endif %}
+      - IPProtocol: {{ fw.protocol }}
+        ports: {{ fw.ports }}
+{% endfor %}
+
 outputs:
   - name: internalAddress
     value: $(ref.{{ name }}-internal-address.address)
