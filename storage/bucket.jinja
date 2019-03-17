@@ -50,6 +50,12 @@ resources:
       kind: storage#bucketAccessControl
       bucket: {{ properties['name'] }}
       role: {{ ac.role }}
+    metadata:
+      dependsOn:
+        - {{ properties['name'] }}
+  {% if loop.index != loop.length %}
+        - {{ properties['acl'][loop.index]['name'] }}-acl
+  {% endif %}
 {% endfor %}
 
 outputs:
