@@ -42,6 +42,7 @@ resources:
       dependsOn:
         - {{ properties['name'] }}
 
+{% if not properties['bucketPolicyOnly'] %}
 {% for ac in properties['acl'] %}
   - name: {{ ac.name }}-acl
     type: storage.v1.bucketAccessControl
@@ -57,6 +58,7 @@ resources:
         - {{ properties['acl'][loop.index]['name'] }}-acl
   {% endif %}
 {% endfor %}
+{% endif %}
 
 outputs:
 
