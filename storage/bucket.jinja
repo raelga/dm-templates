@@ -5,6 +5,9 @@ resources:
     properties:
       storageClass: {{ properties['storageClass']  }}
       location: {{ properties['location'] }}
+      iamConfiguration:
+        bucketPolicyOnly:
+          enabled: {{ properties['bucketPolicyOnly'] }}
       {% if properties["websiteConfig"] %}
       website:
         mainPageSuffix: {{ properties["websiteConfig"].mainPageSuffix }}
@@ -42,6 +45,7 @@ resources:
       dependsOn:
         - {{ properties['name'] }}
 
+{% if not properties['bucketPolicyOnly'] %}
 {% for ac in properties['acl'] %}
   - name: {{ ac.name }}-acl
     type: storage.v1.bucketAccessControl
@@ -50,7 +54,14 @@ resources:
       kind: storage#bucketAccessControl
       bucket: {{ properties['name'] }}
       role: {{ ac.role }}
+    metadata:
+      dependsOn:
+        - {{ properties['name'] }}
+  {% if loop.index != loop.length %}
+        - {{ properties['acl'][loop.index]['name'] }}-acl
+  {% endif %}
 {% endfor %}
+{% endif %}
 
 outputs:
 
