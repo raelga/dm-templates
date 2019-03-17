@@ -356,6 +356,14 @@ properties:
             The file type for the specified uri.
             - SQL: The file contains SQL statements.
             - CSV: The file contains CSV data.
+        database:
+          type: string
+          pattern: ^[0-9a-zA-Z$_]+$
+          decription: >
+            The target database for the import. If fileType is SQL, this field
+            is required only if the import file does not specify a database,
+            and is overridden by any database specification in the import file.
+            If fileType is CSV, one database must be specified.
         requiresACL:
           type: boolean
           default: false

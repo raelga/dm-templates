@@ -170,7 +170,7 @@ resources:
       - {{ name }}-master
 {% endif %}
 
-- name: {{ name }}-{{ importContext.name }}-import-acl
+- name: {{ name }}-{{ importContext.name }}-import
   action: gcp-types/sqladmin-v1beta4:sql.instances.import
   properties:
     instance: $(ref.{{ name }}-master.name)
@@ -179,6 +179,9 @@ resources:
       kind: sql#importContext
       fileType: {{ importContext.type }}
       uri: gs://{{ importContext.bucket }}/{{ importContext.file }}
+      {% if importContext.database %}
+      database: {{ importContext.database }}
+      {% endif %}
   metadata:
     runtimePolicy:
       - CREATE
