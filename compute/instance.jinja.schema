@@ -111,3 +111,48 @@ properties:
       is terminated by Compute Engine (not terminated by a user).
       You can only set the automatic restart option for standard instances.
       Preemptible instances cannot be automatically restarted.
+
+  firewall:
+    type: array
+    default: []
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          default: >
+            Human friendly rule name
+        policy:
+          enum:
+            - allow
+            - deny
+          default: allow
+          description: >
+            Each rule specifies a protocol and port-range tuple that describes
+            a permitted or denied connection.
+        protocol:
+          enum:
+            - tcp
+            - udp
+            - icmp
+            - esp
+            - ah
+            - ipip
+            - sctp
+          default: tcp
+          description: >
+            RThe IP protocol to which this rule applies.
+            The protocol type is  required when creating a firewall rule.
+            This value can either be one of the following well known protocol
+            strings (tcp, udp, icmp, esp, ah, ipip, sctp).
+        port:
+          type: array
+          items:
+            type: number
+            minimum: 0
+            maximum: 65535
+            description: >
+              An optional list of ports to which this rule applies.
+              This field is only applicable for UDP or TCP protocol.
+              Each entry must be either an integer or a range.
+              If not specified, this rule applies to connections through any port.
