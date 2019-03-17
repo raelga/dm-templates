@@ -330,3 +330,52 @@ properties:
             enconded in base64 without padding. More information in:
               https://cloud.google.com/kms/base64-encoding
             Check also the /gs/rshared-secrets/Makefile in this repo.
+
+  imports:
+    type: array
+    default: []
+    items:
+      type: object
+      required:
+        - name
+        - bucket
+        - file
+      properties:
+        name:
+          type: string
+          pattern: ^[0-9a-zA-Z_]+$
+          default: root
+          description: >
+            Human friendly name of the import.
+        type:
+          enum:
+            - SQL
+            - CSV
+          default: SQL
+          description: |
+            The file type for the specified uri.
+            - SQL: The file contains SQL statements.
+            - CSV: The file contains CSV data.
+        requiresACL:
+          type: boolean
+          default: false
+          description: >
+            If the file is in a private repo, the template will try to add
+            READER permissions to the CloudSQL service account createing an ACL.
+            The ACL will be at object level, for that particular file.
+        bucket:
+          type: string
+          description: >
+            Path to the import file in Cloud Storage,
+            in the form gs://bucketName/fileName.
+            Compressed gzip files (.gz) are supported when fileType is SQL.
+            The instance must have write permissions to the bucket and
+            read access to the file.
+        file:
+          type: string
+          description: >
+            Path to the import file in Cloud Storage,
+            in the form gs://bucketName/fileName.
+            Compressed gzip files (.gz) are supported when fileType is SQL.
+            The instance must have write permissions to the bucket and
+            read access to the file.
