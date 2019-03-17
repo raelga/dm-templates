@@ -14,6 +14,13 @@ help:
 DEFAULT_REGION := europe-west1
 DEFAULT_DEPLOYMENTS_PATH := ./deployments
 
+# When setting DM_SOFT_MODE environment variable
+# the update targets will not create neither delete resources,
+# only ABANDON on deletion and ACQUIRE existing on creation
+ifeq (${DM_SOFT_MODE},1)
+	SOFT_FLAGS := --delete-policy ABANDON --create-policy ACQUIRE
+endif
+
 gcloud-config-rael-base:
 	gcloud config set project rael-base
 	gcloud config set compute/region ${DEFAULT_REGION}
@@ -49,7 +56,7 @@ $(addprefix dm-update-,$(DEPLOYMENTS)):dm-update-%:.dm-set-% dm-preview-%
 		&& read ans
 	gcloud deployment-manager deployments \
 		update ${dm_name} \
-		--project ${project_id}
+		--project ${project_id} $(SOFT_FLAGS)
 
 # Target for previewing the deployment
 .PHONY+=$(addprefix dm-preview-,$(DEPLOYMENTS))
@@ -58,4 +65,4 @@ $(addprefix dm-preview-,$(DEPLOYMENTS)):dm-preview-%:.dm-set-%
 		update ${dm_name} \
 		--config ${dm_config} \
 		--project ${project_id} \
-		--preview
+		--preview $(SOFT_FLAGS)
