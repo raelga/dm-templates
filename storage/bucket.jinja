@@ -5,6 +5,9 @@ resources:
     properties:
       storageClass: {{ properties['storageClass']  }}
       location: {{ properties['location'] }}
+      iamConfiguration:
+        bucketPolicyOnly:
+          enabled: {{ properties['bucketPolicyOnly'] }}
       {% if properties["websiteConfig"] %}
       website:
         mainPageSuffix: {{ properties["websiteConfig"].mainPageSuffix }}
