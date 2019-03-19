@@ -1,14 +1,8 @@
 info:
-  title: A template for creating a pool of similar instances in a zone.
-  author: Google, Inc.
-  description: |
-    This template lets users create a collection of instances of a given type,
-    number and zone. This can also be achieved using InstanceGroupManager, but
-    this templates does it without using one.
-
-    NOTE: Unlike InstanceGroupManager pools, this pool does not re-create
-    instances upon failure or termination to keep up with the target pool
-    size.
+  title: GCE Instance template
+  author: Rael Garcia <me@rael.io>
+  description: Creates a Google Cloud Engine instance with disks, SA and firewall rules
+  version: 1.0
 
 properties:
 
