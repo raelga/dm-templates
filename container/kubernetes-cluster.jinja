@@ -27,24 +27,12 @@ resources:
         - monitoring.timeSeries.create
         - monitoring.timeSeries.list
 
-- name: {{ env.project }}-get-iam-policy
-  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.getIamPolicy
+- name: {{ env["project"] }}-{{ properties.name }}-nodes-sa-binding
+  type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
   properties:
-    resource: {{ env.project }}
-  metadata:
-    runtimePolicy:
-      - UPDATE_ALWAYS
-
-- name: {{ env.project }}-patch-iam-policy
-  action: gcp-types/cloudresourcemanager-v1:cloudresourcemanager.projects.setIamPolicy
-  properties:
-    resource: {{ env.project }}
-    policy: $(ref.{{ env.project }}-get-iam-policy)
-    gcpIamPolicyPatch:
-      add:
-        - role: $(ref.{{ properties.name }}-nodes-custom-role.name)
-          members:
-            - serviceAccount:$(ref.{{ properties.name }}-gke-nodes-sa.email)
+    resource: {{ env["project"] }}
+    member: serviceAccount:$(ref.{{ properties.name }}-gke-nodes-sa.email)
+    role: $(ref.{{ properties.name }}-nodes-custom-role.name)
 
 - name: {{ properties.name }}
 {% if properties.type == 'REGIONAL' %}
@@ -107,7 +95,7 @@ resources:
       {% endif %}
   metadata:
     dependsOn:
-      - {{ env.project }}-patch-iam-policy
+      - {{ env["project"] }}-{{ properties.name }}-nodes-sa-binding
 
 {% if properties.mode == 'UPDATE' %}
 
