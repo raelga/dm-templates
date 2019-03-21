@@ -61,7 +61,7 @@ resources:
 {% if properties.initialVersion %}
       initialClusterVersion: {{ properties.initialVersion }}
 {% endif %}
-      loggingService: {{ properties.monitoringService }}
+      loggingService: {{ properties.loggingService }}
       monitoringService: {{ properties.monitoringService }}
       ipAllocationPolicy:
         useIpAliases: true
