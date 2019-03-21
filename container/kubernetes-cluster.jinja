@@ -131,7 +131,7 @@ resources:
       config:
         machineType: {{ nodePool.machineType }}
         imageType: {{ nodePool.imageType }}
-        diskType: "pd-standard"
+        diskType: {{ nodePool.diskType }}
         diskSizeGb: {{ nodePool.diskSizeGb }}
         preemptible: {{ nodePool.preemptible }}
         serviceAccount: $(ref.{{ properties.name }}-gke-nodes-sa.email)

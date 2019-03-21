@@ -179,6 +179,13 @@ properties:
             Whether the nodes are created as preemptible VM instances.
             For more information about preemptible VM instances:
             https://cloud.google.com/compute/docs/instances/preemptible.
+        diskType:
+          enum:
+            - pd-standard
+            - pd-ssd
+          description: >
+            Type of the disk attached to each node.
+          default: pd-standard
         diskSizeGb:
           type: number
           description: >
@@ -191,7 +198,7 @@ properties:
             The list of instance tags applied to all nodes. Tags are used to
             identify valid sources or targets for network firewalls and are
             specified by the client during custer or node pool creation.
-          default: [] 
+          default: []
           items:
             type: string
             description: Tag.
