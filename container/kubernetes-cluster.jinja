@@ -61,7 +61,7 @@ resources:
 {% if properties.initialVersion %}
       initialClusterVersion: {{ properties.initialVersion }}
 {% endif %}
-      loggingService: {{ properties.monitoringService }}
+      loggingService: {{ properties.loggingService }}
       monitoringService: {{ properties.monitoringService }}
       ipAllocationPolicy:
         useIpAliases: true
@@ -130,8 +130,8 @@ resources:
     {% endif %}
       config:
         machineType: {{ nodePool.machineType }}
-        imageType: "COS"
-        diskType: "pd-standard"
+        imageType: {{ nodePool.imageType }}
+        diskType: {{ nodePool.diskType }}
         diskSizeGb: {{ nodePool.diskSizeGb }}
         preemptible: {{ nodePool.preemptible }}
         serviceAccount: $(ref.{{ properties.name }}-gke-nodes-sa.email)
