@@ -130,7 +130,7 @@ resources:
     {% endif %}
       config:
         machineType: {{ nodePool.machineType }}
-        imageType: "COS"
+        imageType: {{ nodePool.imageType }}
         diskType: "pd-standard"
         diskSizeGb: {{ nodePool.diskSizeGb }}
         preemptible: {{ nodePool.preemptible }}

@@ -165,6 +165,13 @@ properties:
             The name of a Google Compute Engine machine type.
           default: f1-micro
           pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+        imageType:
+          type: string
+          description: >
+            The image type to use for this node. Note that for a given image
+            type, the latest version of it will be used.
+          default: cos
+          pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
         preemptible:
           type: boolean
           default: true
