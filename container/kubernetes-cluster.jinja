@@ -155,6 +155,9 @@ resources:
     dependsOn:
       - {{ properties.name }}
       - {{ properties.name }}-gke-nodes-sa
+  {% if loop.index != loop.length %}
+      - {{ properties.name }}-{{ properties['nodePools'][loop.index]['name'] }}-gke-node-pool
+  {% endif %}
 {% endfor %}
 
 {% endif %}
