@@ -113,6 +113,40 @@ properties:
         default: kube-dns
         description: >
           The name of the Kubernetes DNS.
+      dnsZone:
+        type: object
+        additionalProperties: false
+        description: The DNS zone where the dns recordset will be registered.
+        default:
+          name: gitops-zone
+          fqdn: gitops.gcp.rael.io
+        required:
+          - name
+          - fqdn
+        properties:
+          name:
+            type: string
+            default: gitops
+            description: >
+              The name of the mananged DNS zone.
+          fqdn:
+            type: string
+            default: gcp.rael.io.
+            description: >
+              The FQDN of the mananged DNS zone.
+      traefik:
+        type: boolean
+        default: true
+        description: >
+          Enable or disable traefik addon.
+      traefikServiceType:
+        enum:
+          - LoadBalanacer
+          - NodePort
+        default: NodePort
+        description: >
+          Kubernetes service type for Traefik
+
 
   nodePools:
     type: array
