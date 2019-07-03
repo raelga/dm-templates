@@ -96,6 +96,15 @@ properties:
           The name of the Google Compute Engine zone or region in which the cluster resides.
         default: europe-west1
         pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+      locations:
+        type: array
+        default: []
+        items:
+          type: string
+          description: >
+            The name of the Google Compute Engine zone or region in which the cluster resides.
+          default: europe-west1
+          pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
       subnet:
         type: string
         description: >

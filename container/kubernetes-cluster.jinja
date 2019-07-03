@@ -50,10 +50,14 @@ resources:
       network: {{ properties.network.name }}
       subnetwork: {{ properties.network.subnet }}
 {% if properties.type == 'REGIONAL' %}
+      {% if properties.locations %}
+      locations: {{ properties.locations }}
+      {% else %}
       locations:
         - "{{ properties.network.location }}-b"
         - "{{ properties.network.location }}-c"
         - "{{ properties.network.location }}-d"
+      {% endif %}
 {% elif properties.type == 'LOCAL' %}
       locations:
         - {{ properties.network.location }}
