@@ -425,7 +425,7 @@ resources:
 
 {% endif %}
 
-{% if properties.network.traefik %}
+{% if properties.network.ingress == 'traefik' %}
 
 - name: {{ CLUSTER_NAME }}-k8s-traefik-namespace
   type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-v1:{{ K8S_NS_COLLECTION }}

@@ -143,9 +143,11 @@ properties:
             default: gcp.rael.io.
             description: >
               The FQDN of the mananged DNS zone.
-      traefik:
-        type: boolean
-        default: false
+      ingress:
+        enum:
+          - gke
+          - traefik
+        default: gke
         description: >
           Enable or disable traefik addon.
       traefikServiceType:
