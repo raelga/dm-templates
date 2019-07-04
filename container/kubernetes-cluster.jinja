@@ -121,9 +121,7 @@ resources:
     parent: {{ "projects/{}/zones/{}/clusters/{}".format(
       properties.network.project or env.project, properties.network.location, properties.name
     )}}
-    zone: {{ properties.network.location }}
 {% endif %}
-    clusterId: {{ properties.name }}
     nodePool:
       name: {{ nodePool.name }}-pool
     {% if nodePool.version or properties.initialVersion %}
