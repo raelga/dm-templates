@@ -39,32 +39,28 @@ resources:
   type: gcp-types/container-v1:projects.locations.clusters
   properties:
     parent: {{ "projects/{}/locations/{}".format(
-      properties.network.project or env.project, properties.network.location)
+      properties.network.project or env.project, properties.network.region)
     }}
 {% elif properties.type == 'LOCAL' %}
   type: gcp-types/container-v1:projects.zones.clusters
   properties:
     parent: {{ "projects/{}/zones/{}".format(
-      properties.network.project or env.project, properties.network.location)
+      properties.network.project or env.project, properties.network.zone)
     }}
-    zone: {{ properties.network.location }}
+    zone: {{ properties.network.zone }}
 {% endif %}
     cluster:
       name: {{ properties.name }}
       network: {{ properties.network.name }}
       subnetwork: {{ properties.network.subnet }}
 {% if properties.type == 'REGIONAL' %}
-      {% if properties.locations %}
-      locations: {{ properties.locations }}
-      {% else %}
       locations:
-        - "{{ properties.network.location }}-b"
-        - "{{ properties.network.location }}-c"
-        - "{{ properties.network.location }}-d"
-      {% endif %}
+        - "{{ properties.network.region }}-b"
+        - "{{ properties.network.region }}-c"
+        - "{{ properties.network.region }}-d"
 {% elif properties.type == 'LOCAL' %}
       locations:
-        - {{ properties.network.location }}
+        - {{ properties.network.zone }}
 {% endif %}
 {% if properties.initialVersion %}
       initialClusterVersion: {{ properties.initialVersion }}
@@ -113,13 +109,13 @@ resources:
   type: gcp-types/container-v1:projects.locations.clusters.nodePools
   properties:
     parent: {{ "projects/{}/locations/{}/clusters/{}".format(
-      properties.network.project or env.project, properties.network.location, properties.name
+      properties.network.project or env.project, properties.network.region, properties.name
     )}}
 {% elif properties.type == 'LOCAL' %}
   type: gcp-types/container-v1:projects.zones.clusters.nodePools
   properties:
     parent: {{ "projects/{}/zones/{}/clusters/{}".format(
-      properties.network.project or env.project, properties.network.location, properties.name
+      properties.network.project or env.project, properties.network.zone, properties.name
     )}}
 {% endif %}
     nodePool:
@@ -278,7 +274,7 @@ resources:
       - {{ properties.name }}-k8s-type-rbac-v1
 
 - name: {{ properties.name }}-k8s-coredns-crb
-  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CRB_CN }}-OLLECTI
+  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding

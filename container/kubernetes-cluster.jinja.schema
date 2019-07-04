@@ -76,18 +76,6 @@ properties:
             cidrBlock must be specified in CIDR notation.
           pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
 
-  locations:
-    type: array
-    default:
-      - europe-west1-b
-      - europe-west1-c
-      - europe-west1-d
-    items:
-      type: string
-      description: >
-        The name of the Google Compute Engine zone or region in which the cluster resides.
-      pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
-
   network:
     type: object
     additionalProperties: false
@@ -105,9 +93,25 @@ properties:
       location:
         type: string
         description: >
-          The name of the Google Compute Engine zone or region in which the cluster resides.
+          The name of the Google Compute Engine zone in which the cluster resides.
         default: europe-west1
         pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
+      region:
+        description: >
+          The name of the Google Compute Engine region in which the cluster resides.
+        default: europe-west1
+        pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[0-9]$)?
+      locations:
+        type: array
+        default:
+          - europe-west1-b
+          - europe-west1-c
+          - europe-west1-d
+        items:
+          type: string
+          description: >
+            The name of the Google Compute Engine zone or region in which the cluster resides.
+          pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
       subnet:
         type: string
         description: >
