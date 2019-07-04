@@ -161,7 +161,6 @@ properties:
         description: >
           Kubernetes service type for Traefik
 
-
   nodePools:
     type: array
     default: []
