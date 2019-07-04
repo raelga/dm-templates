@@ -179,7 +179,7 @@ resources:
 %}
 
 {% for typeSuffix, endpoint in K8S_ENDPOINTS.iteritems() %}
-- name: k8s-{{ typeSuffix }}-type
+- name: {{ properties.name }}-k8s-type-{{ typeSuffix }}
   type: deploymentmanager.v2beta.typeProvider
   properties:
     options:
@@ -213,10 +213,9 @@ resources:
 {% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles' %}
 {% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings' %}
 
-
 {% if properties.network.nonMasqueradeCIDRs %}
-- name: k8s-ip-masq-agent-configmap
-  type: {{ env.project }}/k8s-v1-type:{{ K8S_CM_COLLECTION }}
+- name: {{ properties.name }}-k8s-ip-masq-agent-cm
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ConfigMap
@@ -231,13 +230,13 @@ resources:
         resyncInterval: 60s
   metadata:
     dependsOn:
-      - k8s-v1-type
+      - {{ properties.name }}-k8s-type-v1
 {% endif %}
 
 {% if properties.network.dns == 'coreDNS' %}
 
-- name: k8s-coredns-sa
-  type: {{ env.project }}/k8s-v1-type:{{ K8S_SA_COLLECTION }}
+- name: {{ properties.name }}-k8s-coredns-sa
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ServiceAccount
@@ -247,10 +246,10 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - k8s-v1-type
+      - {{ properties.name }}-k8s-type-v1
 
-- name: k8s-coredns-cr
-  type: {{ env.project }}/k8s-rbac-v1-type:{{ K8S_CR_COLLECTION }}
+- name: {{ properties.name }}-k8s-coredns-cr
+  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CR_CN }}-OLLECTI
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
@@ -278,10 +277,10 @@ resources:
       - get
   metadata:
     dependsOn:
-      - k8s-rbac-v1-type
+      - {{ properties.name }}-k8s-type-rbac-v1
 
-- name: k8s-coredns-crb
-  type: {{ env.project }}/k8s-rbac-v1-type:{{ K8S_CRB_COLLECTION }}
+- name: {{ properties.name }}-k8s-coredns-crb
+  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CRB_CN }}-OLLECTI
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -302,10 +301,10 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - k8s-rbac-v1-type
+      - {{ properties.name }}-k8s-type-rbac-v1
 
-- name: k8s-coredns-configmap
-  type: {{ env.project }}/k8s-v1-type:{{ K8S_CM_COLLECTION }}
+- name: {{ properties.name }}-k8s-coredns-cm
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ConfigMap
@@ -332,10 +331,10 @@ resources:
         }
   metadata:
     dependsOn:
-      - k8s-v1-type
+      - {{ properties.name }}-k8s-type-v1
 
-- name: k8s-coredns-deployment
-  type: {{ env.project }}/k8s-extensions-v1beta1-type:{{ K8S_DEPLOYMENTS_COLLECTION }}
+- name: {{ properties.name }}-k8s-coredns-deployment
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DEPLOYMENTS_COLLECTION }}
   properties:
     apiVersion: extensions/v1beta1
     kind: Deployment
@@ -421,24 +420,24 @@ resources:
                     path: Corefile
   metadata:
     dependsOn:
-      - k8s-v1-type
+      - {{ properties.name }}-k8s-type-v1
 
 {% endif %}
 
 {% if properties.network.ingress == 'traefik' %}
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-namespace
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-v1:{{ K8S_NS_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-namespace
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_NS_COLLECTION }}
   properties:
     kind: Namespace
     metadata:
       name: traefik
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-v1
+      - {{ properties.name }}-k8s-type-v1
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-sa
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-sa
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ServiceAccount
@@ -447,11 +446,11 @@ resources:
       name: traefik
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-v1
-      - {{ CLUSTER_NAME }}-k8s-traefik-namespace
+      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-traefik-namespace
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-cr
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-cr
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
@@ -485,10 +484,10 @@ resources:
           - update
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-type-rbac-v1
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-crb
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-crb
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -505,12 +504,12 @@ resources:
       namespace: traefik
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-rbac-v1
-      - {{ CLUSTER_NAME }}-k8s-traefik-sa
-      - {{ CLUSTER_NAME }}-k8s-traefik-cr
+      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-traefik-sa
+      - {{ properties.name }}-k8s-traefik-cr
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-ds
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-extensions-v1beta1:{{ K8S_DS_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-ds
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DS_COLLECTION }}
   properties:
     kind: DaemonSet
     apiVersion: extensions/v1beta1
@@ -570,20 +569,20 @@ resources:
             - --acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory #}
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-extensions-v1beta1
-      - {{ CLUSTER_NAME }}-k8s-traefik-namespace
-      - {{ CLUSTER_NAME }}-k8s-traefik-sa
+      - {{ properties.name }}-k8s-type-extensions-v1beta1
+      - {{ properties.name }}-k8s-traefik-namespace
+      - {{ properties.name }}-k8s-traefik-sa
 
 {% if properties.network.traefikServiceType == 'LoadBalancer' %}
 
-- name: {{ CLUSTER_NAME }}-traefik-external-address
+- name: {{ properties.name }}-traefik-external-address
   type: compute.v1.address
   properties:
     addressType: EXTERNAL
     region: {{ properties.network.region }}
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-srv
-  type: {{ env.project }}/{{ CLUSTER_NAME }}-k8s-type-v1:{{ K8S_SVC_COLLECTION }}
+- name: {{ properties.name }}-k8s-traefik-srv
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SVC_COLLECTION }}
   properties:
     kind: Service
     apiVersion: v1
@@ -592,7 +591,7 @@ resources:
       name: traefik
     spec:
       type: LoadBalancer
-      loadBalancerIP: $(ref.{{ CLUSTER_NAME }}-traefik-external-address.address)
+      loadBalancerIP: $(ref.{{ properties.name }}-traefik-external-address.address)
       selector:
         k8s-app: traefik
       ports:
@@ -610,31 +609,31 @@ resources:
           targetPort: 8080
   metadata:
     dependsOn:
-      - {{ CLUSTER_NAME }}-k8s-type-v1
-      - {{ CLUSTER_NAME }}-traefik-external-address
-      - {{ CLUSTER_NAME }}-k8s-traefik-namespace
+      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-traefik-external-address
+      - {{ properties.name }}-k8s-traefik-namespace
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-srv-root-dns-rs
+- name: {{ properties.name }}-k8s-traefik-srv-root-dns-rs
   type: gcp-types/dns-v1:resourceRecordSets
   properties:
-    name: "{{ CLUSTER_NAME }}.{{ properties.network.dnsZone.fqdn }}."
+    name: "{{ properties.name }}.{{ properties.network.dnsZone.fqdn }}."
     managedZone: {{ properties.network.dnsZone.name }}
     records:
     - type: A
       ttl: 60
       rrdatas:
-      - $(ref.{{ CLUSTER_NAME }}-traefik-external-address.address)
+      - $(ref.{{ properties.name }}-traefik-external-address.address)
 
-- name: {{ CLUSTER_NAME }}-k8s-traefik-srv-wildcard-dns-rs
+- name: {{ properties.name }}-k8s-traefik-srv-wildcard-dns-rs
   type: gcp-types/dns-v1:resourceRecordSets
   properties:
-    name: "*.{{ CLUSTER_NAME }}.{{ properties.network.dnsZone.fqdn }}."
+    name: "*.{{ properties.name }}.{{ properties.network.dnsZone.fqdn }}."
     managedZone: {{ properties.network.dnsZone.name }}
     records:
     - type: A
       ttl: 60
       rrdatas:
-      - $(ref.{{ CLUSTER_NAME }}-traefik-external-address.address)
+      - $(ref.{{ properties.name }}-traefik-external-address.address)
 
 {% endif %}
 {% endif %}
