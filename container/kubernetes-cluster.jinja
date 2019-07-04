@@ -39,13 +39,13 @@ resources:
   type: gcp-types/container-v1:projects.locations.clusters
   properties:
     parent: {{ "projects/{}/locations/{}".format(
-      properties.network.project | defautl(env.project), properties.network.location)
+      properties.network.project or env.project, properties.network.location)
     }}
 {% elif properties.type == 'LOCAL' %}
   type: gcp-types/container-v1:projects.zones.clusters
   properties:
     parent: {{ "projects/{}/zones/{}".format(
-      properties.network.project | defautl(env.project), properties.network.location)
+      properties.network.project or env.project, properties.network.location)
     }}
     zone: {{ properties.network.location }}
 {% endif %}
@@ -113,13 +113,13 @@ resources:
   type: gcp-types/container-v1:projects.locations.clusters.nodePools
   properties:
     parent: {{ "projects/{}/locations/{}/clusters/{}".format(
-      properties.network.project | defautl(env.project), properties.network.location, properties.name
+      properties.network.project or env.project, properties.network.location, properties.name
     )}}
 {% elif properties.type == 'LOCAL' %}
   type: gcp-types/container-v1:projects.zones.clusters.nodePools
   properties:
     parent: {{ "projects/{}/zones/{}/clusters/{}".format(
-      properties.network.project | defautl(env.project), properties.network.location, properties.name
+      properties.network.project or env.project, properties.network.location, properties.name
     )}}
     zone: {{ properties.network.location }}
 {% endif %}
@@ -127,7 +127,7 @@ resources:
     nodePool:
       name: {{ nodePool.name }}-pool
     {% if nodePool.version or properties.initialVersion %}
-      version: {{ nodePool.version | default (properties.initialVersion) }}
+      version: {{ nodePool.version or properties.initialVersion }}
     {% endif %}
       initialNodeCount: {{ nodePool.initialNodeCount }}
     {% if nodePool.autoscaling %}
