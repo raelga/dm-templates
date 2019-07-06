@@ -94,15 +94,52 @@ resources:
           disabled: true
         networkPolicyConfig:
           disabled: true
-      {% if properties.mode == 'CREATE' %}
       nodePools:
-        - name: initial-gke-node-pool
-          initialNodeCount: 0
+      {% for nodePool in properties.nodePools %}
+      - name: {{ nodePool.name }}-gke-node-pool
+        {% if nodePool.version or properties.initialVersion %}
+        version: {{ nodePool.version or properties.initialVersion }}
+        {% endif %}
+        initial_node_count: {{ nodePool.initialNodeCount }}
+        {% if nodePool.autoscaling %}
+        autoscaling:
+          enabled: true
+          minNodeCount: {{ nodePool.minNodeCount }}
+          maxNodeCount: {{ nodePool.maxNodeCount }}
+        {% endif %}
+        maxPodsConstraint:
+          maxPodsPerNode: {{ nodePool.maxPodsPerNode or properties.maxPodsPerNode }}
+        management:
+          autoUpgrade: true
+          autoRepair: true
+        config:
+          machineType: {{ nodePool.machineType }}
+          imageType: {{ nodePool.imageType }}
+          diskType: {{ nodePool.diskType }}
+          diskSizeGb: {{ nodePool.diskSizeGb }}
+          preemptible: {{ nodePool.preemptible }}
+          serviceAccount: $(ref.{{ properties.name }}-gke-nodes-sa.email)
+          oauthScopes:
+            - https://www.googleapis.com/auth/compute
+            - https://www.googleapis.com/auth/devstorage.read_only
+            - https://www.googleapis.com/auth/logging.write
+            - https://www.googleapis.com/auth/monitoring
+            - https://www.googleapis.com/auth/servicecontrol
+            - https://www.googleapis.com/auth/service.management.readonly
+          tags: {{ nodePool.tags }}
+          {% if nodePool.taints %}
+          taints:
+            {% for taint in nodePool.taints %}
+            - key: {{ taint.key }}
+              value: "{{ taint.value }}"
+              effect: {{ taint.effect }}
+            {% endfor %}
       {% endif %}
+      {% endfor %}
   metadata:
     dependsOn:
       - {{ env["project"] }}-{{ properties.name }}-nodes-sa-binding
-
+{#
 {% if properties.mode == 'UPDATE' %}
 
 {% for nodePool in properties.nodePools %}
@@ -167,6 +204,7 @@ resources:
 {% endfor %}
 
 {% endif %}
+#}
 
 {% set K8S_ENDPOINTS = {
     'v1': 'api/v1',
