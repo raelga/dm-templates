@@ -47,7 +47,6 @@ resources:
     parent: {{ "projects/{}/zones/{}".format(
       properties.network.project or env.project, properties.network.zone)
     }}
-    zone: {{ properties.network.zone }}
 {% endif %}
     cluster:
       name: {{ properties.name }}
