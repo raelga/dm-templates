@@ -94,6 +94,10 @@ resources:
           disabled: true
         networkPolicyConfig:
           disabled: {{ not properties.networkPolicyConfig }}
+      maintenancePolicy:
+        window:
+          dailyMaintenanceWindow:
+            startTime: "01:00"
       nodePools:
       {% for nodePool in properties.nodePools %}
       - name: {{ nodePool.name }}-gke-node-pool
