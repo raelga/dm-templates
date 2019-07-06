@@ -71,6 +71,8 @@ resources:
         useIpAliases: true
         clusterSecondaryRangeName: "pods"
         servicesSecondaryRangeName: "services"
+      defaultMaxPodsConstraint:
+        maxPodsPerNode: {{ properties.maxPodsPerNode }}
       masterAuth:
         clientCertificateConfig:
           issueClientCertificate: false
@@ -130,6 +132,8 @@ resources:
         minNodeCount: {{ nodePool.minNodeCount }}
         maxNodeCount: {{ nodePool.maxNodeCount }}
     {% endif %}
+      defaultMaxPodsConstraint:
+        maxPodsPerNode: 32
       config:
         machineType: {{ nodePool.machineType }}
         imageType: {{ nodePool.imageType }}

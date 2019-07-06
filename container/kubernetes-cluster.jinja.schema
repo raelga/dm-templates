@@ -55,6 +55,17 @@ properties:
     description: The monitoring service the cluster should use to write metrics.
     default: none
 
+
+  maxPodsPerNode:
+    type: number
+    description: >
+      Constraint enforced on the max num of pods per node. By default, GKE
+      configures nodes to run no more than 110 Pods. Kubernetes assigns
+      each node a range of IP addresses, a CIDR block, so that each Pod
+      can have a unique IP address. The size of the CIDR block corresponds
+      to the maximum number of Pods per node.
+    default: 32
+
   masterAuthorizedNetworks:
     type: array
     default: []
@@ -247,6 +258,14 @@ properties:
             Size of the disk attached to each node, specified in GB.
             The smallest allowed disk size is 10GB (default value).
           default: 10
+        maxPodsPerNode:
+          type: number
+          description: >
+            Constraint enforced on the max num of pods per node. By default, GKE
+            configures nodes to run no more than 110 Pods. Kubernetes assigns
+            each node a range of IP addresses, a CIDR block, so that each Pod
+            can have a unique IP address. The size of the CIDR block corresponds
+            to the maximum number of Pods per node.
         tags:
           type: array
           description: >
