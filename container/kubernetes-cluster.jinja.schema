@@ -55,6 +55,9 @@ properties:
     description: The monitoring service the cluster should use to write metrics.
     default: none
 
+  networkPolicyConfig:
+    type: boolean
+    default: false
 
   maxPodsPerNode:
     type: number

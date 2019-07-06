@@ -93,7 +93,7 @@ resources:
         kubernetesDashboard:
           disabled: true
         networkPolicyConfig:
-          disabled: true
+          disabled: {{ not properties.networkPolicyConfig }}
       nodePools:
       {% for nodePool in properties.nodePools %}
       - name: {{ nodePool.name }}-gke-node-pool
