@@ -137,7 +137,7 @@ resources:
               value: "{{ taint.value }}"
               effect: {{ taint.effect }}
             {% endfor %}
-      {% endif %}
+          {% endif %}
       {% endfor %}
   metadata:
     dependsOn:
