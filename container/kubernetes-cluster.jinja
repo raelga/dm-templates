@@ -212,6 +212,7 @@ resources:
 
 {% set K8S_NS_COLLECTION = '/api/v1/namespaces' %}
 {% set K8S_CM_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps' %}
+{% set K8S_SECRETS_COLLECTION = '/api/v1/namespaces/{namespace}/secrets' %}
 {% set K8S_DEPLOYMENTS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/deployments' %}
 {% set K8S_DS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/daemonsets' %}
 {% set K8S_SVC_COLLECTION = '/api/v1/namespaces/{namespace}/services' %}
