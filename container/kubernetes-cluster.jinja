@@ -752,7 +752,7 @@ resources:
       labels:
         app: kubeip
     data:
-      KUBEIP_LABELKEY: "google-dm"
+      KUBEIP_LABELKEY: "goog-dm"
       KUBEIP_LABELVALUE: "{{ env.deployment }}"
       KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ properties['nodePools'][0]['name'] }}-gke-node-pool.name)"
       KUBEIP_FORCEASSIGNMENT: "true"
