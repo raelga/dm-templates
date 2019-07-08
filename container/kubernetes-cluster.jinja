@@ -102,9 +102,7 @@ resources:
           initialNodeCount: 0
   metadata:
     dependsOn:
-      - {{ env["project"] }}-{{ properties.name }}-nodes-sa-binding
-{#
-{% if properties.mode == 'UPDATE' %}
+      - {{ env["project"] }}-{{ properties.name }}-node-sa-binding
 
 {% for nodePool in properties.nodePools %}
 - name: {{ properties.name }}-{{ nodePool.name }}-gke-node-pool
@@ -122,7 +120,7 @@ resources:
     )}}
 {% endif %}
     nodePool:
-      name: {{ nodePool.name }}-pool
+      name: {{ nodePool.name }}-gke-node-pool
     {% if nodePool.version or properties.initialVersion %}
       version: {{ nodePool.version or properties.initialVersion }}
     {% endif %}
