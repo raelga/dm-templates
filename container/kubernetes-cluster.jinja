@@ -543,6 +543,9 @@ resources:
                   cpu: 50m
                   memory: 50Mi
             ports:
+              - name: traefik
+                containerPort: 8080
+                hostPort: 8080
             - name: http
               containerPort: 80
               hostPort: 80
@@ -551,9 +554,6 @@ resources:
               containerPort: 443
               hostPort: 443
               {% endif %}
-            - name: admin
-              containerPort: 8080
-              hostPort: 8080
             securityContext:
               capabilities:
                 drop:
@@ -606,6 +606,10 @@ resources:
       selector:
         k8s-app: traefik
       ports:
+        - name: traefik
+          protocol: TCP
+          port: 8080
+          targetPort: 8080
         - name: web
           protocol: TCP
           port: 80
