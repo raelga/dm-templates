@@ -643,6 +643,23 @@ resources:
       rrdatas:
       - $(ref.{{ properties.name }}-traefik-external-address.address)
 
+{% else %}
+
+- name: {{ properties.name }}-traefik-node-fw
+  type: compute.v1.firewall
+  properties:
+    network: {{ "projects/{}/global/networks/{}".format(
+      env['project'], properties.network.name
+    ) }}
+    targetTags:
+      - {{ properties.name }}-gke-traefik-node
+    allowed:
+      - IPProtocol: TCP
+        ports:
+          - 80
+          - 8080
+        {% if properties.network.traefikHTTPS %}
+          - 443
 {% endif %}
 
 {% endif %} {# LoadBalancer vs NodePort block #}
