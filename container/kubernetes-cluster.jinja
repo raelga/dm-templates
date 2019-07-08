@@ -189,7 +189,15 @@ resources:
           - https://www.googleapis.com/auth/monitoring
           - https://www.googleapis.com/auth/servicecontrol
           - https://www.googleapis.com/auth/service.management.readonly
-        tags: {{ nodePool.tags }}
+        tags:
+          - {{ properties.name }}-gke-node
+          - {{ nodePool.name }}-gke-node-pool
+        {% if properties.network.ingress == 'traefik' %}
+          - {{ properties.name }}-gke-traefik-node
+        {% endif %}
+        {% for tag in nodePool.tags %}
+          - {{ tag }}
+        {% endfor %}
         {% if nodePool.taints %}
         taints:
           {% for taint in nodePool.taints %}
