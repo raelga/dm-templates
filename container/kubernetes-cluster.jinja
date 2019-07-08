@@ -969,3 +969,7 @@ outputs:
     value: $(ref.{{ properties.name }}-gke-node-sa.email)
   - name: endpoint
     value: $(ref.{{ properties.name }}.endpoint)
+  {% if properties.network.kubeip == 1 %}
+  - name: kubeip-address
+    value: $(ref.{{ properties.name }}-kubeip-external-address.address)
+  {% endif %}
