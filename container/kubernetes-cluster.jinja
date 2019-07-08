@@ -582,7 +582,6 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-type-extensions-v1beta1
-      - {{ properties.name }}-k8s-traefik-namespace
       - {{ properties.name }}-k8s-traefik-sa
 
 {% if properties.network.traefikServiceType == 'LoadBalancer' %}
