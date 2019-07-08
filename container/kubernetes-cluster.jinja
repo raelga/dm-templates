@@ -215,6 +215,7 @@ resources:
 {% set K8S_CM_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps' %}
 {% set K8S_SECRETS_COLLECTION = '/api/v1/namespaces/{namespace}/secrets' %}
 {% set K8S_DEPLOYMENTS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/deployments' %}
+{% set K8S_INGRESSES_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/ingresses' %}
 {% set K8S_DS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/daemonsets' %}
 {% set K8S_SVC_COLLECTION = '/api/v1/namespaces/{namespace}/services' %}
 {% set K8S_SA_COLLECTION = '/api/v1/namespaces/{namespace}/serviceaccounts' %}
@@ -677,16 +678,27 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-type-v1
 
-- name: {{ properties.name }}-k8s-traefik-srv-root-dns-rs
-  type: gcp-types/dns-v1:resourceRecordSets
+- name: {{ properties.name }}-k8s-traefik-ingress
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_INGRESSES_COLLECTION }}
   properties:
-    name: "{{ properties.name }}.{{ properties.network.dnsZone.fqdn }}."
-    managedZone: {{ properties.network.dnsZone.name }}
-    records:
-    - type: A
-      ttl: 60
-      rrdatas:
-      - $(ref.{{ properties.name }}-traefik-external-address.address)
+    kind: Ingress
+    apiVersion: extensions/v1beta1
+    namespace: kube-system
+    metadata:
+      name: traefik
+      namespace: kube-system
+    spec:
+      rules:
+      - host: traefik.glados.rael.io
+        http:
+          paths:
+          - path: /
+            backend:
+              serviceName: traefik
+              servicePort: dashboard
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-traefik-srv
 
 
 {% endif %} {# Traefik block #}
