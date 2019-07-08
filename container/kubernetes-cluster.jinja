@@ -546,9 +546,11 @@ resources:
             - name: http
               containerPort: 80
               hostPort: 80
+              {% if properties.network.traefikHTTPS %}
             - name: https
               containerPort: 443
               hostPort: 443
+              {% endif %}
             - name: admin
               containerPort: 8080
               hostPort: 8080
@@ -563,7 +565,7 @@ resources:
             - --kubernetes
             - --logLevel=INFO
             - --accesslog
-            {# - "--entrypoints=Name:web Address::80"
+              {% if properties.network.traefikHTTPS %}
             - "--entrypoints=Name:websecure Address::443 TLS"
             - --acme
             - --acme.acmelogging
@@ -574,7 +576,8 @@ resources:
             - --acme.storage=acme.json
             # Please note that this is the staging Let's Encrypt server. Once you get things
             # working, you should remove that whole line altogether.
-            - --acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory #}
+                - --acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+              {% endif %}
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-type-extensions-v1beta1
@@ -607,14 +610,12 @@ resources:
           protocol: TCP
           port: 80
           targetPort: 80
+      {% if properties.network.traefikHTTPS %}
         - name: websecure
           protocol: TCP
           port: 443
           targetPort: 443
-        - name: admin
-          protocol: TCP
-          port: 8080
-          targetPort: 8080
+      {% endif %}
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-type-v1
