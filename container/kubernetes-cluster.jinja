@@ -574,7 +574,7 @@ resources:
                   cpu: 50m
                   memory: 50Mi
               ports:
-              - name: traefik
+              - name: dashboard
                 containerPort: 8080
                 hostPort: 8080
               - name: http
@@ -596,9 +596,9 @@ resources:
                 - --kubernetes
                 - --logLevel=INFO
                 - --accesslog
-                - "--entrypoints=Name:web Address::80"
+                - "--entrypoints=Name:http Address::80"
               {% if properties.network.traefikHTTPS %}
-                - "--entrypoints=Name:websecure Address::443 TLS"
+                - "--entrypoints=Name:https Address::443 TLS"
                 - --acme
                 - --acme.acmelogging
                 - --acme.tlschallenge
@@ -637,16 +637,16 @@ resources:
       selector:
         k8s-app: traefik
       ports:
-        - name: traefik
+        - name: dashboard
           protocol: TCP
           port: 8080
           targetPort: 8080
-        - name: web
+        - name: http
           protocol: TCP
           port: 80
           targetPort: 80
       {% if properties.network.traefikHTTPS %}
-        - name: websecure
+        - name: https
           protocol: TCP
           port: 443
           targetPort: 443
