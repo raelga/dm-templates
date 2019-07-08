@@ -1,10 +1,10 @@
 resources:
 
-- name: {{ properties.name }}-gke-nodes-sa
+- name: {{ properties.name }}-gke-node-sa
   type: iam.v1.serviceAccount
   properties:
-    accountId: {{ properties.name }}-gke-nodes
-    displayName: VM Service Account for {{ properties.name }}-gke-nodes-sa GKE Cluster VMs
+    accountId: {{ properties.name }}-gke-node
+    displayName: VM Service Account for {{ properties.name }} GKE nodes
 
 - name: {{ properties.name }}-nodes-custom-role
   type: gcp-types/iam-v1:projects.roles
@@ -27,11 +27,11 @@ resources:
         - monitoring.timeSeries.create
         - monitoring.timeSeries.list
 
-- name: {{ env["project"] }}-{{ properties.name }}-nodes-sa-binding
+- name: {{ env["project"] }}-{{ properties.name }}-node-sa-binding
   type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
   properties:
     resource: {{ env["project"] }}
-    member: serviceAccount:$(ref.{{ properties.name }}-gke-nodes-sa.email)
+    member: serviceAccount:$(ref.{{ properties.name }}-gke-node-sa.email)
     role: $(ref.{{ properties.name }}-nodes-custom-role.name)
 
 - name: {{ properties.name }}
