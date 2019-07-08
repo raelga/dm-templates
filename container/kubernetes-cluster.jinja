@@ -172,8 +172,9 @@ resources:
         minNodeCount: {{ nodePool.minNodeCount }}
         maxNodeCount: {{ nodePool.maxNodeCount }}
     {% endif %}
-      defaultMaxPodsConstraint:
-        maxPodsPerNode: 32
+      management:
+        autoUpgrade: true
+        autoRepair: true
       config:
         machineType: {{ nodePool.machineType }}
         imageType: {{ nodePool.imageType }}
