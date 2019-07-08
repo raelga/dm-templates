@@ -703,27 +703,22 @@ resources:
 
 {% endif %} {# Traefik block #}
 
-- name: {{ properties.name }}-traefik-node-fw
-  type: compute.v1.firewall
-  properties:
-    network: {{ "projects/{}/global/networks/{}".format(
-      env['project'], properties.network.name
-    ) }}
-    targetTags:
-      - {{ properties.name }}-gke-traefik-node
-    allowed:
-      - IPProtocol: TCP
-        ports:
-          - 80
-          - 8080
-        {% if properties.network.traefikHTTPS %}
-          - 443
-        {% endif %}
-
-{% endif %} {# LoadBalancer vs NodePort block #}
-{% endif %} {# Traefik block #}
-
 {% if properties.network.kubeip %}
+
+{% if properties.network.kubeip > 1 %}
+
+{% for ip in range(properties.network.kubeip) %}
+- name: {{ properties.name }}-kubeip-{{ ip }}-external-address
+  type:  gcp-types/compute-beta:addresses
+  properties:
+    addressType: EXTERNAL
+    region: {{ properties.network.region }}
+    labels:
+      gke: {{ properties.name }}
+      kubeip: {{ properties.name }}-{{ ip }}
+{% endfor %}
+
+{% else %}
 
 - name: {{ properties.name }}-kubeip-external-address
   type:  gcp-types/compute-beta:addresses
@@ -733,6 +728,8 @@ resources:
     labels:
       gke: {{ properties.name }}
       kubeip: {{ properties.name }}
+
+{% endif %}
 
 - name: {{ properties.name }}-k8s-kubeip-sa
   type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
