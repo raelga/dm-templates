@@ -429,7 +429,7 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-type-v1
 
-{% endif %}
+{% endif %} {# CoreDNS block #}
 
 {% if properties.network.ingress == 'traefik' %}
 
@@ -644,7 +644,10 @@ resources:
       - $(ref.{{ properties.name }}-traefik-external-address.address)
 
 {% endif %}
-{% endif %}
+
+{% endif %} {# LoadBalancer vs NodePort block #}
+{% endif %} {# Traefik block #}
+
 
 outputs:
   - name: project
