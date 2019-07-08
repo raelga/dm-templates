@@ -535,6 +535,13 @@ resources:
           containers:
           - image: traefik
             name: traefik
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 200Mi
+                requests:
+                  cpu: 50m
+                  memory: 50Mi
             ports:
             - name: http
               containerPort: 80
