@@ -144,7 +144,7 @@ resources:
         diskType: {{ nodePool.diskType }}
         diskSizeGb: {{ nodePool.diskSizeGb }}
         preemptible: {{ nodePool.preemptible }}
-        serviceAccount: $(ref.{{ properties.name }}-gke-nodes-sa.email)
+        serviceAccount: $(ref.{{ properties.name }}-gke-node-sa.email)
         oauthScopes:
           - https://www.googleapis.com/auth/compute
           - https://www.googleapis.com/auth/devstorage.read_only
