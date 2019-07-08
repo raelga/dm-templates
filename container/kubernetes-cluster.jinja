@@ -565,6 +565,7 @@ resources:
             - --kubernetes
             - --logLevel=INFO
             - --accesslog
+                - "--entrypoints=Name:web Address::80"
               {% if properties.network.traefikHTTPS %}
             - "--entrypoints=Name:websecure Address::443 TLS"
             - --acme
