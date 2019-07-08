@@ -260,7 +260,7 @@ resources:
       - {{ properties.name }}-k8s-type-v1
 
 - name: {{ properties.name }}-k8s-coredns-cr
-  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CR_CN }}-OLLECTI
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
@@ -291,7 +291,7 @@ resources:
       - {{ properties.name }}-k8s-type-rbac-v1
 
 - name: {{ properties.name }}-k8s-coredns-crb
-  type: {{ env.project }}/{{ properties.name }}-k8s-rbac-v1-type:{{ K8S_CRB_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
