@@ -181,6 +181,7 @@ resources:
     'apps-v1beta1': 'apis/apps/v1beta1',
     'extensions-v1beta1': 'apis/extensions/v1beta1',
     'rbac-v1': 'apis/rbac.authorization.k8s.io/v1',
+    'storage-v1': 'apis/storage.k8s.io/v1'
   }
 %}
 
@@ -219,6 +220,7 @@ resources:
 {% set K8S_SA_COLLECTION = '/api/v1/namespaces/{namespace}/serviceaccounts' %}
 {% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles' %}
 {% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings' %}
+{% set K8S_SC_COLLECTION = '/apis/storage.k8s.io/v1/storageclasses' %}
 
 {% for namespace in properties.k8s.namespaces %}
 - name: {{ properties.name }}-k8s-{{ namespace }}-ns
@@ -250,6 +252,27 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-type-v1
+{% endif %}
+
+{% if properties.network.regionalStorageClass %}
+- name: {{ properties.name }}-k8s-regionalpd-sc
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-storage-v1:{{ K8S_SC_COLLECTION }}
+  properties:
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: regionalpd-std
+    provisioner: kubernetes.io/gce-pd
+    parameters:
+      type: pd-standard
+      replication-type: regional-pd
+      zones: |
+        "{{ properties.network.region }}-b",
+        "{{ properties.network.region }}-c",
+        "{{ properties.network.region }}-d"
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-type-storage-v1
 {% endif %}
 
 {% if properties.network.dns == 'coreDNS' %}
