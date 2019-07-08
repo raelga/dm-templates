@@ -754,16 +754,12 @@ resources:
     data:
       KUBEIP_LABELKEY: "goog-dm"
       KUBEIP_LABELVALUE: "{{ env.deployment }}"
-      KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ properties['nodePools'][0]['name'] }}-gke-node-pool.name)"
+      KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ (properties['nodePools']|last)['name'] }}-gke-node-pool.name)"
       KUBEIP_FORCEASSIGNMENT: "true"
       KUBEIP_ADDITIONALNODEPOOLS: ""
       KUBEIP_TICKER: "1"
       KUBEIP_ALLNODEPOOLS: "false"
-  metadata:
-    dependsOn:
-    {% for nodePool in properties.nodePools %}
-      - {{ properties.name }}-{{ nodePool.name }}-gke-node-pool
-    {% endfor %}
+
 
 - name: {{ properties.name }}-gke-kubeip-sa
   type: iam.v1.serviceAccount
