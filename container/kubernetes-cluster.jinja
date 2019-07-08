@@ -623,6 +623,26 @@ resources:
     addressType: EXTERNAL
     region: {{ properties.network.region }}
 
+{% else %}
+
+- name: {{ properties.name }}-traefik-node-fw
+  type: compute.v1.firewall
+  properties:
+    network: {{ "projects/{}/global/networks/{}".format(
+      env['project'], properties.network.name
+    ) }}
+    targetTags:
+      - {{ properties.name }}-gke-traefik-node
+    allowed:
+      - IPProtocol: TCP
+        ports:
+          - 80
+        {% if properties.network.traefikHTTPS %}
+          - 443
+        {% endif %}
+
+{% endif %} {# LoadBalancer vs NodePort block #}
+
 - name: {{ properties.name }}-k8s-traefik-srv
   type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SVC_COLLECTION }}
   properties:
@@ -632,8 +652,10 @@ resources:
     metadata:
       name: traefik
     spec:
+      {% if properties.network.traefikServiceType == 'LoadBalancer' %}
       type: LoadBalancer
       loadBalancerIP: $(ref.{{ properties.name }}-traefik-external-address.address)
+      {% endif %}
       selector:
         k8s-app: traefik
       ports:
@@ -654,7 +676,6 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-type-v1
-      - {{ properties.name }}-traefik-external-address
 
 - name: {{ properties.name }}-k8s-traefik-srv-root-dns-rs
   type: gcp-types/dns-v1:resourceRecordSets
@@ -667,18 +688,8 @@ resources:
       rrdatas:
       - $(ref.{{ properties.name }}-traefik-external-address.address)
 
-- name: {{ properties.name }}-k8s-traefik-srv-wildcard-dns-rs
-  type: gcp-types/dns-v1:resourceRecordSets
-  properties:
-    name: "*.{{ properties.name }}.{{ properties.network.dnsZone.fqdn }}."
-    managedZone: {{ properties.network.dnsZone.name }}
-    records:
-    - type: A
-      ttl: 60
-      rrdatas:
-      - $(ref.{{ properties.name }}-traefik-external-address.address)
 
-{% else %}
+{% endif %} {# Traefik block #}
 
 - name: {{ properties.name }}-traefik-node-fw
   type: compute.v1.firewall
