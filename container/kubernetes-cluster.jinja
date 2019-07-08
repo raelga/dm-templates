@@ -121,16 +121,16 @@ resources:
 {% endif %}
     nodePool:
       name: {{ nodePool.name }}-gke-node-pool
-    {% if nodePool.version or properties.initialVersion %}
+      {% if nodePool.version or properties.initialVersion %}
       version: {{ nodePool.version or properties.initialVersion }}
-    {% endif %}
+      {% endif %}
       initialNodeCount: {{ nodePool.initialNodeCount }}
-    {% if nodePool.autoscaling %}
+      {% if nodePool.autoscaling %}
       autoscaling:
         enabled: true
         minNodeCount: {{ nodePool.minNodeCount }}
         maxNodeCount: {{ nodePool.maxNodeCount }}
-    {% endif %}
+      {% endif %}
       maxPodsConstraint:
         maxPodsPerNode: {{ nodePool.maxPodsPerNode or properties.maxPodsPerNode }}
       management:
@@ -529,8 +529,8 @@ resources:
           serviceAccountName: traefik
           terminationGracePeriodSeconds: 60
           containers:
-          - image: traefik
-            name: traefik
+            - image: traefik
+              name: traefik
               resources:
                 limits:
                   cpu: 200m
@@ -538,41 +538,41 @@ resources:
                 requests:
                   cpu: 50m
                   memory: 50Mi
-            ports:
+              ports:
               - name: traefik
                 containerPort: 8080
                 hostPort: 8080
-            - name: http
-              containerPort: 80
-              hostPort: 80
+              - name: http
+                containerPort: 80
+                hostPort: 80
               {% if properties.network.traefikHTTPS %}
-            - name: https
-              containerPort: 443
-              hostPort: 443
+              - name: https
+                containerPort: 443
+                hostPort: 443
               {% endif %}
-            securityContext:
-              capabilities:
-                drop:
-                - ALL
-                add:
-                - NET_BIND_SERVICE
-            args:
-            - --api
-            - --kubernetes
-            - --logLevel=INFO
-            - --accesslog
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                  add:
+                  - NET_BIND_SERVICE
+              args:
+                - --api
+                - --kubernetes
+                - --logLevel=INFO
+                - --accesslog
                 - "--entrypoints=Name:web Address::80"
               {% if properties.network.traefikHTTPS %}
-            - "--entrypoints=Name:websecure Address::443 TLS"
-            - --acme
-            - --acme.acmelogging
-            - --acme.tlschallenge
-            - --acme.onhostrule
-            - --acme.email=domains@rael.io
-            - --acme.entrypoint=websecure
-            - --acme.storage=acme.json
-            # Please note that this is the staging Let's Encrypt server. Once you get things
-            # working, you should remove that whole line altogether.
+                - "--entrypoints=Name:websecure Address::443 TLS"
+                - --acme
+                - --acme.acmelogging
+                - --acme.tlschallenge
+                - --acme.onhostrule
+                - --acme.email=domains@rael.io
+                - --acme.entrypoint=websecure
+                - --acme.storage=acme.json
+                # Please note that this is the staging Let's Encrypt server. Once you get things
+                # working, you should remove that whole line altogether.
                 - --acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
               {% endif %}
   metadata:
@@ -660,11 +660,247 @@ resources:
           - 8080
         {% if properties.network.traefikHTTPS %}
           - 443
-{% endif %}
+        {% endif %}
 
 {% endif %} {# LoadBalancer vs NodePort block #}
 {% endif %} {# Traefik block #}
 
+{% if properties.network.kubeip %}
+
+- name: {{ properties.name }}-kubeip-external-address
+  type:  gcp-types/compute-beta:addresses
+  properties:
+    addressType: EXTERNAL
+    region: {{ properties.network.region }}
+    labels:
+      gke: {{ properties.name }}
+      kubeip: {{ properties.name }}
+
+- name: {{ properties.name }}-k8s-kubeip-sa
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: ServiceAccount
+    namespace: kube-system
+    metadata:
+      name: kubeip
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-type-v1
+
+- name: {{ properties.name }}-k8s-kubeip-cr
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
+  properties:
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    namespace: kube-system
+    metadata:
+      name: kubeip
+    rules:
+      - apiGroups:
+          - ""
+        resources:
+          - nodes
+        verbs:
+          - get
+          - list
+          - watch
+          - patch
+      - apiGroups:
+          - ""
+        resources:
+          - pods
+        verbs:
+          - get
+          - list
+          - watch
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-type-rbac-v1
+
+- name: {{ properties.name }}-k8s-kubeip-crb
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
+  properties:
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    namespace: kube-system
+    metadata:
+      name: kubeip
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: kubeip
+    subjects:
+    - kind: ServiceAccount
+      name: kubeip
+      namespace: kube-system
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-kubeip-sa
+      - {{ properties.name }}-k8s-kubeip-cr
+
+- name: {{ properties.name }}-k8s-kubeip-cm
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: ConfigMap
+    namespace: kube-system
+    metadata:
+      name: kubeip-config
+      namespace: kube-system
+      labels:
+        app: kubeip
+    data:
+      KUBEIP_LABELKEY: "google-dm"
+      KUBEIP_LABELVALUE: "{{ env.deployment }}"
+      KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ properties['nodePools'][0]['name'] }}-gke-node-pool.name)"
+      KUBEIP_FORCEASSIGNMENT: "true"
+      KUBEIP_ADDITIONALNODEPOOLS: ""
+      KUBEIP_TICKER: "1"
+      KUBEIP_ALLNODEPOOLS: "false"
+  metadata:
+    dependsOn:
+    {% for nodePool in properties.nodePools %}
+      - {{ properties.name }}-{{ nodePool.name }}-gke-node-pool
+    {% endfor %}
+
+- name: {{ properties.name }}-gke-kubeip-sa
+  type: iam.v1.serviceAccount
+  properties:
+    accountId: {{ properties.name }}-gke-kubeip
+    displayName: Service Account for {{ properties.name }} KubeIP deployment
+
+- name: {{ properties.name }}-gke-kubeip-custom-role
+  type: gcp-types/iam-v1:projects.roles
+  properties:
+    parent: "projects/{{ env.project }}"
+    roleId: "custom.{{ properties.name }}KubeIP"
+    role:
+      title: Custom Role for GKE KubeIP deployment
+      description: This role allows the KubeIP deployment work with GCP APIs
+      stage: GA
+      includedPermissions:
+        - compute.addresses.list
+        - compute.instances.addAccessConfig
+        - compute.instances.deleteAccessConfig
+        - compute.instances.get
+        - compute.instances.list
+        - compute.projects.get
+        - container.clusters.get
+        - container.clusters.list
+        - resourcemanager.projects.get
+        - compute.networks.useExternalIp
+        - compute.subnetworks.useExternalIp
+        - compute.addresses.use
+
+- name: {{ env["project"] }}-{{ properties.name }}-kubeip-sa-binding
+  type: gcp-types/cloudresourcemanager-v1:virtual.projects.iamMemberBinding
+  properties:
+    resource: {{ env["project"] }}
+    member: serviceAccount:$(ref.{{ properties.name }}-gke-kubeip-sa.email)
+    role: $(ref.{{ properties.name }}-gke-kubeip-custom-role.name)
+
+- name: {{ properties.name }}-gke-kubeip-sa-key
+  type: gcp-types/iam-v1:projects.serviceAccounts.keys
+  properties:
+    parent: $(ref.{{ properties.name }}-gke-kubeip-sa.name)
+    privateKeyType: TYPE_GOOGLE_CREDENTIALS_FILE
+
+- name: {{ properties.name }}-k8s-kubeip-secret
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SECRETS_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: Secret
+    namespace: kube-system
+    metadata:
+      name: kubeip-key
+      namespace: kube-system
+      labels:
+        app: kubeip
+    data:
+      key.json: $(ref.{{ properties.name }}-gke-kubeip-sa-key.privateKeyData)
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-gke-kubeip-sa-key
+
+- name: {{ properties.name }}-k8s-kubeip-deployment
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DEPLOYMENTS_COLLECTION }}
+  properties:
+    apiVersion: extensions/v1beta1
+    kind: Deployment
+    namespace: kube-system
+    metadata:
+      name: kubeip
+      namespace: kube-system
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: kubeip
+      template:
+          metadata:
+            labels:
+              app: kubeip
+          spec:
+            priorityClassName: system-cluster-critical
+            restartPolicy: Always
+            serviceAccountName: kubeip
+            containers:
+            - name: "kubeip"
+              image: gcr.io/raelga/kubeip:doitintl.a70927f
+              imagePullPolicy: Always
+              volumeMounts:
+              - name: google-cloud-key
+                mountPath: /var/secrets/google
+              env:
+              - name: "KUBEIP_LABELKEY"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_LABELKEY"
+                    name: "kubeip-config"
+              - name: "KUBEIP_LABELVALUE"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_LABELVALUE"
+                    name: "kubeip-config"
+              - name: "KUBEIP_NODEPOOL"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_NODEPOOL"
+                    name: "kubeip-config"
+              - name: "KUBEIP_FORCEASSIGNMENT"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_FORCEASSIGNMENT"
+                    name: "kubeip-config"
+              - name: "KUBEIP_ADDITIONALNODEPOOLS"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_ADDITIONALNODEPOOLS"
+                    name: "kubeip-config"
+              - name: "KUBEIP_TICKER"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_TICKER"
+                    name: "kubeip-config"
+              - name: "KUBEIP_ALLNODEPOOLS"
+                valueFrom:
+                  configMapKeyRef:
+                    key: "KUBEIP_ALLNODEPOOLS"
+                    name: "kubeip-config"
+              - name: GOOGLE_APPLICATION_CREDENTIALS
+                value: /var/secrets/google/key.json
+            volumes:
+              - name: google-cloud-key
+                secret:
+                  secretName: kubeip-key
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-kubeip-cm
+      - {{ properties.name }}-k8s-kubeip-secret
+
+{% endif %} {# FloatingIP block #}
 
 outputs:
   - name: project
@@ -672,6 +908,6 @@ outputs:
   - name: name
     value: $(ref.{{ properties.name }}.name)
   - name: nodes-sa
-    value: $(ref.{{ properties.name }}-gke-nodes-sa.email)
+    value: $(ref.{{ properties.name }}-gke-node-sa.email)
   - name: endpoint
     value: $(ref.{{ properties.name }}.endpoint)

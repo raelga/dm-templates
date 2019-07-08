@@ -178,6 +178,11 @@ properties:
         default: NodePort
         description: >
           Kubernetes service type for Traefik
+      kubeip:
+        type: number
+        default: 0
+        description: >
+          Kubernetes service type for Traefik
 
   nodePools:
     type: array
