@@ -220,6 +220,18 @@ resources:
 {% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles' %}
 {% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings' %}
 
+{% for namespace in properties.k8s.namespaces %}
+- name: {{ properties.name }}-k8s-{{ namespace }}-ns
+  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_NS_COLLECTION }}
+  properties:
+    kind: Namespace
+    metadata:
+      name: {{ namespace }}
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-type-v1
+{% endfor %}
+
 {% if properties.network.nonMasqueradeCIDRs %}
 - name: {{ properties.name }}-k8s-ip-masq-agent-cm
   type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}

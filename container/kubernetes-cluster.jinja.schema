@@ -317,6 +317,19 @@ properties:
                     https://cloud.google.com/kubernetes-engine/docs/how-to/node-taints
                   default: NO_SCHEDULE
 
+  k8s:
+    type: object
+    additionalProperties: false
+    description: Kubernetes configuration for the Cluster.
+    required:
+      - namespaces
+    properties:
+      namespaces:
+        type: array
+        default: []
+        description: >
+          List of namespaces to be created in the cluster.
+
   mode:
     type: string
     description: >
