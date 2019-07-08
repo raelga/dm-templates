@@ -170,14 +170,11 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}
-      - {{ properties.name }}-gke-nodes-sa
+      - {{ properties.name }}-gke-node-sa
   {% if loop.index != loop.length %}
       - {{ properties.name }}-{{ properties['nodePools'][loop.index]['name'] }}-gke-node-pool
   {% endif %}
 {% endfor %}
-
-{% endif %}
-#}
 
 {% set K8S_ENDPOINTS = {
     'v1': 'api/v1',
