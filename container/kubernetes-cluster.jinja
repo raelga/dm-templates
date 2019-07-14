@@ -92,11 +92,17 @@ resources:
         kubernetesDashboard:
           disabled: true
         networkPolicyConfig:
-          disabled: {{ not properties.networkPolicyConfig }}
+          disabled: {{ false if properties.network.networkPolicy else true }}
       maintenancePolicy:
         window:
           dailyMaintenanceWindow:
             startTime: "01:00"
+      {# This section is documented but doesn't work
+      {% if properties.network.networkPolicy %}
+      networkPolicy:
+        provider: {{ properties.network.networkPolicyProvider }}
+        enabled: {{ properties.network.networkPolicy }}
+      {% endif %} #}
       nodePools:
         - name: initial-pool
           initialNodeCount: 0

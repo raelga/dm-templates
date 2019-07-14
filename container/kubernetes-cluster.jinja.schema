@@ -55,10 +55,6 @@ properties:
     description: The monitoring service the cluster should use to write metrics.
     default: none
 
-  networkPolicyConfig:
-    type: boolean
-    default: false
-
   maxPodsPerNode:
     type: number
     description: >
@@ -188,6 +184,21 @@ properties:
         default: 0
         description: >
           Kubernetes service type for Traefik
+
+      networkPolicy:
+        type: boolean
+        default: false
+        description: >
+          Configuration options for the NetworkPolicy feature.
+          https://kubernetes.io/docs/concepts/services-networking/networkpolicies/
+
+      networkPolicyProvider:
+        enum:
+          - PROVIDER_UNSPECIFIED
+          - CALICO
+        description: >
+          Allowed Network Policy providers.
+        default: CALICO
 
   nodePools:
     type: array
