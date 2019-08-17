@@ -665,6 +665,8 @@ resources:
       type: LoadBalancer
       loadBalancerIP: $(ref.{{ properties.name }}-traefik-external-address.address)
       externalTrafficPolicy: Local
+      {% else %}
+      type: ClusterIP
       {% endif %}
       selector:
         k8s-app: traefik
