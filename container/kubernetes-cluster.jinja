@@ -664,8 +664,8 @@ resources:
       {% if properties.network.traefikServiceType == 'LoadBalancer' %}
       type: LoadBalancer
       loadBalancerIP: $(ref.{{ properties.name }}-traefik-external-address.address)
-      {% endif %}
       externalTrafficPolicy: Local
+      {% endif %}
       selector:
         k8s-app: traefik
       ports:
