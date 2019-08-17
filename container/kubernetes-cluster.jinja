@@ -658,11 +658,14 @@ resources:
     namespace: kube-system
     metadata:
       name: traefik
+    annotation:
+      service.beta.kubernetes.io/external-tarffic=OnlyLocal
     spec:
       {% if properties.network.traefikServiceType == 'LoadBalancer' %}
       type: LoadBalancer
       loadBalancerIP: $(ref.{{ properties.name }}-traefik-external-address.address)
       {% endif %}
+      externalTrafficPolicy: Local
       selector:
         k8s-app: traefik
       ports:
