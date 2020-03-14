@@ -882,6 +882,7 @@ resources:
       key.json: $(ref.{{ properties.name }}-gke-kubeip-sa-key.privateKeyData)
   metadata:
     dependsOn:
+      - {{ properties.name }}-k8s-type-v1
       - {{ properties.name }}-gke-kubeip-sa-key
 
 - name: {{ properties.name }}-k8s-kubeip-deployment
