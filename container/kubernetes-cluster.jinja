@@ -47,6 +47,7 @@ resources:
     parent: {{ "projects/{}/zones/{}".format(
       properties.network.project or env.project, properties.network.zone)
     }}
+    zone: {{ properties.network.zone }}
 {% endif %}
     cluster:
       name: {{ properties.name }}
@@ -124,6 +125,8 @@ resources:
     parent: {{ "projects/{}/zones/{}/clusters/{}".format(
       properties.network.project or env.project, properties.network.zone, properties.name
     )}}
+    clusterId: {{ properties.name }}
+    zone: {{ properties.network.zone }}
 {% endif %}
     nodePool:
       name: {{ nodePool.name }}-gke-node-pool
