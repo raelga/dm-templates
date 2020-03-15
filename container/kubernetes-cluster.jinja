@@ -185,52 +185,30 @@ resources:
   {% endif %}
 {% endfor %}
 
-{% set K8S_ENDPOINTS = {
-    'v1': 'api/v1',
-    'apps-v1beta1': 'apis/apps/v1beta1',
-    'extensions-v1beta1': 'apis/extensions/v1beta1',
-    'rbac-v1': 'apis/rbac.authorization.k8s.io/v1',
-    'storage-v1': 'apis/storage.k8s.io/v1'
-  }
-%}
-
-{% for typeSuffix, endpoint in K8S_ENDPOINTS.iteritems() %}
-- name: {{ properties.name }}-k8s-type-{{ typeSuffix }}
+- name: {{ properties.name }}-k8s-provider
   type: deploymentmanager.v2beta.typeProvider
   properties:
+    descriptorUrl: https://$(ref.{{ properties.name }}.endpoint)/openapi/v2
     options:
       validationOptions:
         schemaValidation: IGNORE_WITH_WARNINGS
       inputMappings:
-      - fieldName: name
-        location: PATH
-        methodMatch: ^(GET|DELETE|PUT)$
-        value: $.ifNull($.resource.properties.metadata.name, $.resource.name)
-      - fieldName: metadata.name
-        location: BODY
-        methodMatch: ^(PUT|POST)$
-        value: $.ifNull($.resource.properties.metadata.name, $.resource.name)
       - fieldName: Authorization
         location: HEADER
         value: >
           $.concat("Bearer ", $.googleOauth2AccessToken())
-    descriptorUrl: https://$(ref.{{ properties.name }}.endpoint)/swaggerapi/{{ endpoint }}
-  metadata:
-    dependsOn:
-      - {{ properties.name }}
-{% endfor %}
 
-{% set K8S_NS_COLLECTION = '/api/v1/namespaces' %}
-{% set K8S_CM_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps' %}
-{% set K8S_SECRETS_COLLECTION = '/api/v1/namespaces/{namespace}/secrets' %}
-{% set K8S_DEPLOYMENTS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/deployments' %}
-{% set K8S_INGRESSES_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/ingresses' %}
-{% set K8S_DS_COLLECTION = '/apis/extensions/v1beta1/namespaces/{namespace}/daemonsets' %}
-{% set K8S_SVC_COLLECTION = '/api/v1/namespaces/{namespace}/services' %}
-{% set K8S_SA_COLLECTION = '/api/v1/namespaces/{namespace}/serviceaccounts' %}
-{% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles' %}
-{% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings' %}
-{% set K8S_SC_COLLECTION = '/apis/storage.k8s.io/v1/storageclasses' %}
+{% set K8S_NS_COLLECTION = '/api/v1/namespaces/{name}' %}
+{% set K8S_CM_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps/{name}' %}
+{% set K8S_SECRETS_COLLECTION = '/api/v1/namespaces/{namespace}/secrets/{name}' %}
+{% set K8S_DEPLOYMENTS_COLLECTION = '/apis/apps/v1/namespaces/{namespace}/deployments/{name}' %}
+{% set K8S_INGRESSES_COLLECTION = '/apis/networking.k8s.io/v1/namespaces/{namespace}/ingresses/{name}' %}
+{% set K8S_DS_COLLECTION = '/apis/apps/v1/namespaces/{namespace}/daemonsets/{name}' %}
+{% set K8S_SVC_COLLECTION = '/api/v1/namespaces/{namespace}/services/{name}' %}
+{% set K8S_SA_COLLECTION = '/api/v1/namespaces/{namespace}/serviceaccounts/{name}' %}
+{% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles/{name}' %}
+{% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/{name}' %}
+{% set K8S_SC_COLLECTION = '/apis/storage.k8s.io/v1/storageclasses/{name}' %}
 
 {% for namespace in properties.k8s.namespaces %}
 - name: {{ properties.name }}-k8s-{{ namespace }}-ns
