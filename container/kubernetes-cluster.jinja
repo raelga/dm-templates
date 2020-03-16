@@ -736,6 +736,8 @@ resources:
               args:
                 - --api
                 - --accesslog
+                - --metrics
+                - --metrics.prometheus
                 - --entrypoints.http.Address=:80
                   {% if properties.network.traefikHTTPS %}
                 - --entrypoints.https.Address=:443
