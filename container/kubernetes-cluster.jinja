@@ -742,6 +742,7 @@ resources:
                   {% if properties.network.traefikHTTPS %}
                 - --entrypoints.https.Address=:443
                   {% endif %}
+                - --providers.kubernetesingress
                 - --providers.kubernetescrd
                 - --certificatesresolvers.default.acme.tlschallenge
                 - --certificatesresolvers.default.acme.email=domains@rael.io
