@@ -179,6 +179,11 @@ properties:
         default: NodePort
         description: >
           Kubernetes service type for Traefik
+      traefikDashboard:
+        type: boolean
+        default: false
+        description: >
+          Add IngressRoute for Traefik traefikDashboard
       kubeip:
         type: number
         default: 0

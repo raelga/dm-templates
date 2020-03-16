@@ -734,7 +734,11 @@ resources:
                   add:
                   - NET_BIND_SERVICE
               args:
+                {% if properties.network.traefikDashboard %}
+                - --api.insecure
+                {% else %}
                 - --api
+                {% endif %}
                 - --accesslog
                 - --metrics
                 - --metrics.prometheus
@@ -814,7 +818,8 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
 
-- name: {{ properties.name }}-k8s-traefik-ingress
+{% if properties.network.traefikDashboard %}
+- name: {{ properties.name }}-k8s-traefik-dashboard
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_TRAEFIK_INGRESSROUTE }}
   properties:
     apiVersion: traefik.containo.us/v1alpha1
@@ -838,6 +843,7 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-traefik-srv
+{% endif %} {# Traefik dashboard #}
 
 {% endif %} {# Traefik block #}
 
