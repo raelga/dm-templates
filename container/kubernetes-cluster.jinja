@@ -120,7 +120,7 @@ resources:
       properties.network.project or env.project, properties.network.region, properties.name
     )}}
 {% elif properties.type == 'LOCAL' %}
-  type: gcp-types/container-v1:projects.zones.clusters.nodePools
+  type: container.v1.nodePool
   properties:
     parent: {{ "projects/{}/zones/{}/clusters/{}".format(
       properties.network.project or env.project, properties.network.zone, properties.name
@@ -197,6 +197,9 @@ resources:
         location: HEADER
         value: >
           $.concat("Bearer ", $.googleOauth2AccessToken())
+  metadata:
+    dependsOn:
+      - {{ properties.name }}
 
 {% set K8S_NS_COLLECTION = '/api/v1/namespaces/{name}' %}
 {% set K8S_CM_COLLECTION = '/api/v1/namespaces/{namespace}/configmaps/{name}' %}
@@ -209,22 +212,24 @@ resources:
 {% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles/{name}' %}
 {% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/{name}' %}
 {% set K8S_SC_COLLECTION = '/apis/storage.k8s.io/v1/storageclasses/{name}' %}
+{% set K8S_CRD_COLLECTION =  '/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/{name}' %}
 
 {% for namespace in properties.k8s.namespaces %}
 - name: {{ properties.name }}-k8s-{{ namespace }}-ns
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_NS_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_NS_COLLECTION }}
   properties:
+    apiVersion: v1
     kind: Namespace
     metadata:
       name: {{ namespace }}
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 {% endfor %}
 
 {% if properties.network.nonMasqueradeCIDRs %}
 - name: {{ properties.name }}-k8s-ip-masq-agent-cm
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ConfigMap
@@ -239,12 +244,12 @@ resources:
         resyncInterval: 60s
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 {% endif %}
 
 {% if properties.network.regionalStorageClass %}
 - name: {{ properties.name }}-k8s-regionalpd-sc
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-storage-v1:{{ K8S_SC_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SC_COLLECTION }}
   properties:
     apiVersion: storage.k8s.io/v1
     kind: StorageClass
@@ -260,13 +265,13 @@ resources:
         "{{ properties.network.region }}-d"
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-storage-v1
+      - {{ properties.name }}-k8s-provider
 {% endif %}
 
 {% if properties.network.dns == 'coreDNS' %}
 
 - name: {{ properties.name }}-k8s-coredns-sa
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SA_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ServiceAccount
@@ -276,10 +281,10 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-coredns-cr
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
@@ -307,10 +312,10 @@ resources:
       - get
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-coredns-crb
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
@@ -331,10 +336,10 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-coredns-cm
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ConfigMap
@@ -361,12 +366,12 @@ resources:
         }
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-coredns-deployment
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DEPLOYMENTS_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DEPLOYMENTS_COLLECTION }}
   properties:
-    apiVersion: extensions/v1beta1
+    apiVersion: apps/v1
     kind: Deployment
     namespace: kube-system
     metadata:
@@ -450,7 +455,7 @@ resources:
                     path: Corefile
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 
 {% endif %} {# CoreDNS block #}
 
