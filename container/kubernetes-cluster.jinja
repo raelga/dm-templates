@@ -462,7 +462,7 @@ resources:
 {% if properties.network.ingress == 'traefik' %}
 
 - name: {{ properties.name }}-k8s-traefik-sa
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SA_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ServiceAccount
@@ -471,14 +471,147 @@ resources:
       name: traefik
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-traefik-IngressRoute-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: ingressroutes.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: IngressRoute
+        plural: ingressroutes
+        singular: ingressroute
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+{% set K8S_TRAEFIK_INGRESSROUTE =  '/apis/traefik.containo.us/v1alpha1/namespaces/{namespace}/ingressroutes/{name}' %}
+
+- name: {{ properties.name }}-k8s-traefik-IngressRouteTCP-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: ingressroutetcps.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: IngressRouteTCP
+        plural: ingressroutetcps
+        singular: ingressroutetcp
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-traefik-IngressRouteUDP-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: ingressrouteudps.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: IngressRouteUDP
+        plural: ingressrouteudps
+        singular: ingressrouteudp
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-traefik-Middleware-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: middlewares.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: Middleware
+        plural: middlewares
+        singular: middleware
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-traefik-TLSStore-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: tlsstores.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: TLSStore
+        plural: tlsstores
+        singular: tlsstore
+      scope: Namespaced
+  metadata:
+    dependsOn:
+
+- name: {{ properties.name }}-k8s-traefik-TLSOption-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: tlsoptions.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: TLSOption
+        plural: tlsoptions
+        singular: tlsoption
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-traefik-TraefikServices-crd
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
+  properties:
+    apiVersion: apiextensions.k8s.io/v1beta1
+    kind: CustomResourceDefinition
+    metadata:
+      name: traefikservices.traefik.containo.us
+    spec:
+      group: traefik.containo.us
+      version: v1alpha1
+      names:
+        kind: TraefikService
+        plural: traefikservices
+        singular: traefikservice
+      scope: Namespaced
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-cr
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
-    namespace: kube-system
     metadata:
       name: traefik
     rules:
@@ -506,16 +639,29 @@ resources:
           - ingresses/status
         verbs:
           - update
+      - apiGroups:
+          - traefik.containo.us
+        resources:
+          - middlewares
+          - tlsstores
+          - tlsoptions
+          - ingressrouteudps
+          - ingressroutetcps
+          - traefikservices
+          - ingressroutes
+        verbs:
+          - get
+          - list
+          - watch
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-crb
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
-    namespace: kube-system
     metadata:
       name: traefik
     roleRef:
@@ -528,15 +674,15 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-k8s-traefik-sa
       - {{ properties.name }}-k8s-traefik-cr
 
 - name: {{ properties.name }}-k8s-traefik-ds
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DS_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DS_COLLECTION }}
   properties:
+    apiVersion: apps/v1
     kind: DaemonSet
-    apiVersion: extensions/v1beta1
     namespace: kube-system
     metadata:
       name: traefik
@@ -547,17 +693,20 @@ resources:
         type: RollingUpdate
         rollingUpdate:
           maxUnavailable: 50%
+      selector:
+        matchLabels:
+          k8s-app: traefik
       template:
         metadata:
+          name: traefik
           labels:
             k8s-app: traefik
-            name: traefik
         spec:
           priorityClassName: system-node-critical
           serviceAccountName: traefik
           terminationGracePeriodSeconds: 60
           containers:
-            - image: traefik
+            - image: traefik:v2.2
               name: traefik
               resources:
                 limits:
@@ -586,26 +735,18 @@ resources:
                   - NET_BIND_SERVICE
               args:
                 - --api
-                - --kubernetes
-                - --logLevel=INFO
                 - --accesslog
-                - "--entrypoints=Name:http Address::80"
-              {% if properties.network.traefikHTTPS %}
-                - "--entrypoints=Name:https Address::443 TLS"
-                - --acme
-                - --acme.acmelogging
-                - --acme.tlschallenge
-                - --acme.onhostrule
-                - --acme.email=domains@rael.io
-                - --acme.entrypoint=websecure
-                - --acme.storage=acme.json
-                # Please note that this is the staging Let's Encrypt server. Once you get things
-                # working, you should remove that whole line altogether.
-                - --acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
-              {% endif %}
+                - --entrypoints.http.Address=:80
+                  {% if properties.network.traefikHTTPS %}
+                - --entrypoints.https.Address=:443
+                  {% endif %}
+                - --providers.kubernetescrd
+                - --certificatesresolvers.default.acme.tlschallenge
+                - --certificatesresolvers.default.acme.email=domains@rael.io
+                - --certificatesresolvers.default.acme.storage=acme.json
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-extensions-v1beta1
+      - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-k8s-traefik-sa
 
 {% if properties.network.traefikServiceType == 'LoadBalancer' %}
@@ -637,7 +778,7 @@ resources:
 {% endif %} {# LoadBalancer vs NodePort block #}
 
 - name: {{ properties.name }}-k8s-traefik-srv
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SVC_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SVC_COLLECTION }}
   properties:
     kind: Service
     apiVersion: v1
@@ -668,30 +809,32 @@ resources:
       {% endif %}
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-ingress
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_INGRESSES_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_TRAEFIK_INGRESSROUTE }}
   properties:
-    kind: Ingress
-    apiVersion: extensions/v1beta1
+    apiVersion: traefik.containo.us/v1alpha1
+    kind: IngressRoute
     namespace: kube-system
     metadata:
       name: traefik
       namespace: kube-system
     spec:
-      rules:
-      - host: traefik.glados.rael.io
-        http:
-          paths:
-          - path: /
-            backend:
-              serviceName: traefik
-              servicePort: dashboard
+      entryPoints:
+        - http
+      {% if properties.network.traefikHTTPS %}
+        - https
+      {% endif %}
+      routes:
+      - match: HostRegexp(`traefik.*`)
+        kind: Rule
+        services:
+        - name: traefik
+          port: 8080
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-traefik-srv
-
 
 {% endif %} {# Traefik block #}
 
@@ -724,7 +867,7 @@ resources:
 {% endif %}
 
 - name: {{ properties.name }}-k8s-kubeip-sa
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SA_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SA_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ServiceAccount
@@ -733,14 +876,13 @@ resources:
       name: kubeip
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-kubeip-cr
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CR_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
-    namespace: kube-system
     metadata:
       name: kubeip
     rules:
@@ -763,14 +905,13 @@ resources:
           - watch
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-kubeip-crb
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-rbac-v1:{{ K8S_CRB_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRB_COLLECTION }}
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
-    namespace: kube-system
     metadata:
       name: kubeip
     roleRef:
@@ -783,12 +924,12 @@ resources:
       namespace: kube-system
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-rbac-v1
+      - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-k8s-kubeip-sa
       - {{ properties.name }}-k8s-kubeip-cr
 
 - name: {{ properties.name }}-k8s-kubeip-cm
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_CM_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
   properties:
     apiVersion: v1
     kind: ConfigMap
@@ -806,7 +947,9 @@ resources:
       KUBEIP_ADDITIONALNODEPOOLS: ""
       KUBEIP_TICKER: "1"
       KUBEIP_ALLNODEPOOLS: "false"
-
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-gke-kubeip-sa
   type: iam.v1.serviceAccount
@@ -851,7 +994,7 @@ resources:
     privateKeyType: TYPE_GOOGLE_CREDENTIALS_FILE
 
 - name: {{ properties.name }}-k8s-kubeip-secret
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-v1:{{ K8S_SECRETS_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SECRETS_COLLECTION }}
   properties:
     apiVersion: v1
     kind: Secret
@@ -865,13 +1008,13 @@ resources:
       key.json: $(ref.{{ properties.name }}-gke-kubeip-sa-key.privateKeyData)
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-type-v1
+      - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-gke-kubeip-sa-key
 
 - name: {{ properties.name }}-k8s-kubeip-deployment
-  type: {{ env.project }}/{{ properties.name }}-k8s-type-extensions-v1beta1:{{ K8S_DEPLOYMENTS_COLLECTION }}
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DEPLOYMENTS_COLLECTION }}
   properties:
-    apiVersion: extensions/v1beta1
+    apiVersion: apps/v1
     kind: Deployment
     namespace: kube-system
     metadata:
@@ -948,8 +1091,8 @@ resources:
                   secretName: kubeip-key
   metadata:
     dependsOn:
-      - {{ properties.name }}-k8s-kubeip-cm
       - {{ properties.name }}-k8s-kubeip-secret
+      - {{ properties.name }}-k8s-kubeip-cm
 
 {% endif %} {# FloatingIP block #}
 
