@@ -835,7 +835,7 @@ resources:
         - https
       {% endif %}
       routes:
-      - match: HostRegexp(`traefik.*`)
+      - match: HostRegexp(`{domain:traefik..*}`)
         kind: Rule
         services:
         - name: traefik
