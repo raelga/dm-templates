@@ -212,7 +212,7 @@ resources:
 {% set K8S_CR_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterroles/{name}' %}
 {% set K8S_CRB_COLLECTION = '/apis/rbac.authorization.k8s.io/v1/clusterrolebindings/{name}' %}
 {% set K8S_SC_COLLECTION = '/apis/storage.k8s.io/v1/storageclasses/{name}' %}
-{% set K8S_CRD_COLLECTION =  '/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/{name}' %}
+{% set K8S_CRD_COLLECTION = '/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/{name}' %}
 
 {% for namespace in properties.k8s.namespaces %}
 - name: {{ properties.name }}-k8s-{{ namespace }}-ns
@@ -568,6 +568,7 @@ resources:
       scope: Namespaced
   metadata:
     dependsOn:
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-TLSOption-crd
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
@@ -685,7 +686,7 @@ resources:
     kind: DaemonSet
     namespace: kube-system
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik-ds
       labels:
         k8s-app: traefik
     spec:
@@ -826,7 +827,7 @@ resources:
     kind: IngressRoute
     namespace: kube-system
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik-dashboard
       namespace: kube-system
     spec:
       entryPoints:
@@ -843,6 +844,7 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-traefik-srv
+      - {{ properties.name }}-k8s-traefik-IngressRoute-crd
 {% endif %} {# Traefik dashboard #}
 
 {% endif %} {# Traefik block #}
@@ -937,28 +939,6 @@ resources:
       - {{ properties.name }}-k8s-kubeip-sa
       - {{ properties.name }}-k8s-kubeip-cr
 
-- name: {{ properties.name }}-k8s-kubeip-cm
-  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
-  properties:
-    apiVersion: v1
-    kind: ConfigMap
-    namespace: kube-system
-    metadata:
-      name: kubeip-config
-      namespace: kube-system
-      labels:
-        app: kubeip
-    data:
-      KUBEIP_LABELKEY: "goog-dm"
-      KUBEIP_LABELVALUE: "{{ env.deployment }}"
-      KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ (properties['nodePools']|last)['name'] }}-gke-node-pool.name)"
-      KUBEIP_FORCEASSIGNMENT: "true"
-      KUBEIP_ADDITIONALNODEPOOLS: ""
-      KUBEIP_TICKER: "1"
-      KUBEIP_ALLNODEPOOLS: "false"
-  metadata:
-    dependsOn:
-      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-gke-kubeip-sa
   type: iam.v1.serviceAccount
@@ -1020,14 +1000,37 @@ resources:
       - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-gke-kubeip-sa-key
 
-- name: {{ properties.name }}-k8s-kubeip-deployment
+- name: {{ properties.name }}-k8s-kubeip-cfg
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: ConfigMap
+    namespace: kube-system
+    metadata:
+      name: {{ properties.name }}-k8s-kubeip-cfg
+      namespace: kube-system
+      labels:
+        app: kubeip
+    data:
+      KUBEIP_LABELKEY: "goog-dm"
+      KUBEIP_LABELVALUE: "{{ env.deployment }}"
+      KUBEIP_NODEPOOL: "$(ref.{{ properties.name }}-{{ (properties['nodePools']|last)['name'] }}-gke-node-pool.name)"
+      KUBEIP_FORCEASSIGNMENT: "true"
+      KUBEIP_ADDITIONALNODEPOOLS: ""
+      KUBEIP_TICKER: "1"
+      KUBEIP_ALLNODEPOOLS: "false"
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
+
+- name: {{ properties.name }}-k8s-kubeip
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DEPLOYMENTS_COLLECTION }}
   properties:
     apiVersion: apps/v1
     kind: Deployment
     namespace: kube-system
     metadata:
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip
       namespace: kube-system
     spec:
       replicas: 1
@@ -1054,37 +1057,37 @@ resources:
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_LABELKEY"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_LABELVALUE"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_LABELVALUE"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_NODEPOOL"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_NODEPOOL"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_FORCEASSIGNMENT"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_FORCEASSIGNMENT"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_ADDITIONALNODEPOOLS"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_ADDITIONALNODEPOOLS"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_TICKER"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_TICKER"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: "KUBEIP_ALLNODEPOOLS"
                 valueFrom:
                   configMapKeyRef:
                     key: "KUBEIP_ALLNODEPOOLS"
-                    name: "kubeip-config"
+                    name: "{{ properties.name }}-k8s-kubeip-cfg"
               - name: GOOGLE_APPLICATION_CREDENTIALS
                 value: /var/secrets/google/key.json
               resources:
@@ -1101,7 +1104,7 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-kubeip-secret
-      - {{ properties.name }}-k8s-kubeip-cm
+      - {{ properties.name }}-k8s-kubeip-cfg
 
 {% endif %} {# FloatingIP block #}
 
