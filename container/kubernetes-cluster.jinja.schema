@@ -286,7 +286,7 @@ properties:
           description: >
             Size of the disk attached to each node, specified in GB.
             The smallest allowed disk size is 10GB (default value).
-          default: 10
+          default: 16
         maxPodsPerNode:
           type: number
           description: >
