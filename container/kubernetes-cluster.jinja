@@ -468,7 +468,7 @@ resources:
     kind: ServiceAccount
     namespace: kube-system
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-provider
@@ -614,7 +614,7 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik
     rules:
       - apiGroups:
           - ""
@@ -664,14 +664,14 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik
     subjects:
     - kind: ServiceAccount
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik
       namespace: kube-system
   metadata:
     dependsOn:
@@ -704,7 +704,7 @@ resources:
             k8s-app: traefik
         spec:
           priorityClassName: system-node-critical
-          serviceAccountName: traefik
+          serviceAccountName: {{ properties.name }}-k8s-traefik
           terminationGracePeriodSeconds: 60
           containers:
             - image: traefik:v2.2
@@ -792,7 +792,7 @@ resources:
     apiVersion: v1
     namespace: kube-system
     metadata:
-      name: traefik
+      name: {{ properties.name }}-k8s-traefik-srv
     spec:
       {% if properties.network.traefikServiceType == 'LoadBalancer' %}
       type: LoadBalancer
@@ -839,7 +839,7 @@ resources:
       - match: HostRegexp(`{domain:traefik..*}`)
         kind: Rule
         services:
-        - name: traefik
+        - name: {{ properties.name }}-k8s-traefik-srv
           port: 8080
   metadata:
     dependsOn:
