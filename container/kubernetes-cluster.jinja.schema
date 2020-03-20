@@ -184,6 +184,11 @@ properties:
         default: false
         description: >
           Add IngressRoute for Traefik traefikDashboard
+      traefikHTTPS:
+        type: boolean
+        default: false
+        description: >
+          Enable Traefik HTTPS endpoints and TLS offloading
       kubeip:
         type: number
         default: 0
