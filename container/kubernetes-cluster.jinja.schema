@@ -356,6 +356,14 @@ properties:
         description: >
           List of namespaces to be created in the cluster.
 
+  clusterRoles:
+    type: boolean
+    default: true
+    description: >
+      I have no idea why, but the ClusterRoles and ClusterRoleBindings are
+      deleted randomly? during deployment manager updates. This boolean is
+      usefull to delete and create them when it happens.
+
   mode:
     type: string
     description: >

@@ -283,6 +283,8 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
 
+{% if properties.clusterRoles %}
+
 - name: {{ properties.name }}-k8s-coredns-cr
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
@@ -337,6 +339,8 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-provider
+
+{% endif %}
 
 - name: {{ properties.name }}-k8s-coredns-cm
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CM_COLLECTION }}
@@ -608,6 +612,8 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
 
+{% if properties.clusterRoles %}
+
 - name: {{ properties.name }}-k8s-traefik-cr
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
@@ -677,7 +683,8 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-k8s-traefik-sa
-      - {{ properties.name }}-k8s-traefik-cr
+
+{% endif %}
 
 - name: {{ properties.name }}-k8s-traefik-ds
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DS_COLLECTION }}
@@ -889,6 +896,8 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
 
+{% if properties.clusterRoles %}
+
 - name: {{ properties.name }}-k8s-kubeip-cr
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CR_COLLECTION }}
   properties:
@@ -938,6 +947,8 @@ resources:
       - {{ properties.name }}-k8s-provider
       - {{ properties.name }}-k8s-kubeip-sa
       - {{ properties.name }}-k8s-kubeip-cr
+
+{% endif %}
 
 
 - name: {{ properties.name }}-gke-kubeip-sa
