@@ -277,7 +277,7 @@ resources:
     kind: ServiceAccount
     namespace: kube-system
     metadata:
-      name: coredns
+      name: {{ properties.name }}-k8s-coredns-sa
       namespace: kube-system
   metadata:
     dependsOn:
@@ -290,11 +290,10 @@ resources:
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
-    namespace: kube-system
     metadata:
+      name: {{ properties.name }}-k8s-coredns-cr
       labels:
         kubernetes.io/bootstrapping: rbac-defaults
-      name: system:coredns
     rules:
     - apiGroups:
       - ""
@@ -321,20 +320,20 @@ resources:
   properties:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
-    namespace: kube-system
     metadata:
+      name: {{ properties.name }}-k8s-coredns-crb
+      namespace: kube-system
       annotations:
         rbac.authorization.kubernetes.io/autoupdate: "true"
       labels:
         kubernetes.io/bootstrapping: rbac-defaults
-      name: system:coredns
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: system:coredns
+      name: {{ properties.name }}-k8s-coredns-cr
     subjects:
     - kind: ServiceAccount
-      name: coredns
+      name: {{ properties.name }}-k8s-coredns-sa
       namespace: kube-system
   metadata:
     dependsOn:
@@ -349,7 +348,7 @@ resources:
     kind: ConfigMap
     namespace: kube-system
     metadata:
-      name: coredns
+      name: {{ properties.name }}-k8s-coredns-cm
       namespace: kube-system
     data:
       Corefile: |
@@ -372,14 +371,14 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-provider
 
-- name: {{ properties.name }}-k8s-coredns-deployment
+- name: {{ properties.name }}-k8s-coredns
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DEPLOYMENTS_COLLECTION }}
   properties:
     apiVersion: apps/v1
     kind: Deployment
     namespace: kube-system
     metadata:
-      name: coredns
+      name: {{ properties.name }}-k8s-coredns
       namespace: kube-system
       labels:
         k8s-app: kube-dns
@@ -398,7 +397,7 @@ resources:
           labels:
             k8s-app: kube-dns
         spec:
-          serviceAccountName: coredns
+          serviceAccountName: {{ properties.name }}-k8s-coredns-sa
           tolerations:
             - key: CriticalAddonsOnly
               operator: 'Exists'
@@ -464,18 +463,6 @@ resources:
 {% endif %} {# CoreDNS block #}
 
 {% if properties.network.ingress == 'traefik' %}
-
-- name: {{ properties.name }}-k8s-traefik-sa
-  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SA_COLLECTION }}
-  properties:
-    apiVersion: v1
-    kind: ServiceAccount
-    namespace: kube-system
-    metadata:
-      name: {{ properties.name }}-k8s-traefik
-  metadata:
-    dependsOn:
-      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-IngressRoute-crd
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_CRD_COLLECTION }}
@@ -620,7 +607,7 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: {{ properties.name }}-k8s-traefik
+      name: {{ properties.name }}-k8s-traefik-cr
     rules:
       - apiGroups:
           - ""
@@ -670,21 +657,34 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
-      name: {{ properties.name }}-k8s-traefik
+      name: {{ properties.name }}-k8s-traefik-crb
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: {{ properties.name }}-k8s-traefik
+      name: {{ properties.name }}-k8s-traefik-cr
     subjects:
     - kind: ServiceAccount
-      name: {{ properties.name }}-k8s-traefik
+      name: {{ properties.name }}-k8s-traefik-sa
       namespace: kube-system
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-provider
+      - {{ properties.name }}-k8s-traefik-cr
       - {{ properties.name }}-k8s-traefik-sa
 
 {% endif %}
+
+- name: {{ properties.name }}-k8s-traefik-sa
+  type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_SA_COLLECTION }}
+  properties:
+    apiVersion: v1
+    kind: ServiceAccount
+    namespace: kube-system
+    metadata:
+      name: {{ properties.name }}-k8s-traefik-sa
+  metadata:
+    dependsOn:
+      - {{ properties.name }}-k8s-provider
 
 - name: {{ properties.name }}-k8s-traefik-ds
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_DS_COLLECTION }}
@@ -711,7 +711,7 @@ resources:
             k8s-app: traefik
         spec:
           priorityClassName: system-node-critical
-          serviceAccountName: {{ properties.name }}-k8s-traefik
+          serviceAccountName: {{ properties.name }}-k8s-traefik-sa
           terminationGracePeriodSeconds: 60
           containers:
             - image: traefik:v2.2
@@ -827,6 +827,7 @@ resources:
       - {{ properties.name }}-k8s-provider
 
 {% if properties.network.traefikDashboard %}
+
 - name: {{ properties.name }}-k8s-traefik-dashboard
   type: {{ env.project }}/{{ properties.name }}-k8s-provider:{{ K8S_TRAEFIK_INGRESSROUTE }}
   properties:
@@ -852,6 +853,7 @@ resources:
     dependsOn:
       - {{ properties.name }}-k8s-traefik-srv
       - {{ properties.name }}-k8s-traefik-IngressRoute-crd
+
 {% endif %} {# Traefik dashboard #}
 
 {% endif %} {# Traefik block #}
@@ -891,7 +893,7 @@ resources:
     kind: ServiceAccount
     namespace: kube-system
     metadata:
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip-sa
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-provider
@@ -904,7 +906,7 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip-cr
     rules:
       - apiGroups:
           - ""
@@ -933,14 +935,14 @@ resources:
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip-crb
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip-cr
     subjects:
     - kind: ServiceAccount
-      name: kubeip
+      name: {{ properties.name }}-k8s-kubeip-sa
       namespace: kube-system
   metadata:
     dependsOn:
@@ -1055,7 +1057,7 @@ resources:
           spec:
             priorityClassName: system-cluster-critical
             restartPolicy: Always
-            serviceAccountName: kubeip
+            serviceAccountName: {{ properties.name }}-gke-kubeip-sa
             containers:
             - name: "kubeip"
               image: gcr.io/raelga/kubeip:doitintl.a70927f
