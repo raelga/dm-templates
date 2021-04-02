@@ -659,7 +659,7 @@ resources:
     metadata:
       name: traefik
     annotation:
-      service.beta.kubernetes.io/external-tarffic=OnlyLocal
+      service.beta.kubernetes.io/external-traffic=OnlyLocal
     spec:
       {% if properties.network.traefikServiceType == 'LoadBalancer' %}
       type: LoadBalancer
