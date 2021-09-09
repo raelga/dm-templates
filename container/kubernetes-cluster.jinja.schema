@@ -92,7 +92,7 @@ properties:
     description: Network configuration for the Cluster.
     required:
       - name
-      - location
+      - zone
       - subnet
     properties:
       name:
@@ -100,11 +100,11 @@ properties:
         description: >
           The name of the Google Compute Engine network to which the cluster is connected.
         pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
-      location:
+      zone:
         type: string
         description: >
           The name of the Google Compute Engine zone in which the cluster resides.
-        default: europe-west1
+        default: europe-west1-c
         pattern: ^[a-zA-Z0-9]([-a-zA-Z0-9]+[-a-zA-Z0-9]$)?
       region:
         description: >
@@ -134,7 +134,7 @@ properties:
         pattern: ^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\/(3[0-2]|[12]?[0-9])$
       regionalStorageClass:
         type: boolean
-        default: true
+        default: false
         description: >
           Creates the regionalpd-std StorageClass for regional disks.
       dns:
@@ -179,6 +179,16 @@ properties:
         default: NodePort
         description: >
           Kubernetes service type for Traefik
+      traefikDashboard:
+        type: boolean
+        default: false
+        description: >
+          Add IngressRoute for Traefik traefikDashboard
+      traefikHTTPS:
+        type: boolean
+        default: false
+        description: >
+          Enable Traefik HTTPS endpoints and TLS offloading
       kubeip:
         type: number
         default: 0
@@ -261,7 +271,12 @@ properties:
           description: >
             The image type to use for this node. Note that for a given image
             type, the latest version of it will be used.
-          default: cos
+          default: cos_containerd
+        version:
+          type: string
+          description: >
+            The initial Kubernetes version for this node pool.
+            https://cloud.google.com/kubernetes-engine/release-notes
         preemptible:
           type: boolean
           default: true
@@ -281,7 +296,7 @@ properties:
           description: >
             Size of the disk attached to each node, specified in GB.
             The smallest allowed disk size is 10GB (default value).
-          default: 10
+          default: 16
         maxPodsPerNode:
           type: number
           description: >
@@ -345,6 +360,14 @@ properties:
         default: []
         description: >
           List of namespaces to be created in the cluster.
+
+  clusterRoles:
+    type: boolean
+    default: true
+    description: >
+      I have no idea why, but the ClusterRoles and ClusterRoleBindings are
+      deleted randomly? during deployment manager updates. This boolean is
+      usefull to delete and create them when it happens.
 
   mode:
     type: string
