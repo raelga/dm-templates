@@ -628,6 +628,20 @@ resources:
           - list
           - watch
       - apiGroups:
+          - networking.k8s.io
+        resources:
+         - ingresses
+        verbs:
+          - list
+          - watch
+          - get
+      - apiGroups:
+          - networking.k8s.io
+        resources:
+          - ingresses/status
+        verbs:
+         - update
+      - apiGroups:
           - extensions
         resources:
           - ingresses/status
@@ -1058,7 +1072,7 @@ resources:
           spec:
             priorityClassName: system-cluster-critical
             restartPolicy: Always
-            serviceAccountName: {{ properties.name }}-gke-kubeip-sa
+            serviceAccountName: {{ properties.name }}-k8s-kubeip-sa
             containers:
             - name: "kubeip"
               image: gcr.io/raelga/kubeip:doitintl.a70927f
@@ -1118,6 +1132,7 @@ resources:
   metadata:
     dependsOn:
       - {{ properties.name }}-k8s-kubeip-secret
+      - {{ properties.name }}-k8s-kubeip-sa
       - {{ properties.name }}-k8s-kubeip-cfg
 
 {% endif %} {# FloatingIP block #}
